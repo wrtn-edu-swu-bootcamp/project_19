@@ -93,11 +93,10 @@ export default async function InsightPage({ params }: PageProps) {
         {/* Insight Content */}
         <InsightDetail insight={insight} />
 
-        {/* Divider */}
-        <hr className="my-8 border-0 h-px bg-separator opacity-30" />
-
         {/* Note Editor */}
-        <NoteEditor insightDate={date} />
+        <div className="mt-8">
+          <NoteEditor insightDate={date} />
+        </div>
       </main>
     </div>
   );

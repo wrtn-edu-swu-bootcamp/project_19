@@ -20,11 +20,19 @@ type CalendarProps = {
   insightDates: string[]; // Array of dates with insights (YYYY-MM-DD format)
   selectedDate: Date | null;
   onDateSelect: (date: Date) => void;
+  onMonthChange?: (year: number, month: number) => void; // 월 변경 콜백
+  isLoading?: boolean; // 데이터 로딩 중 상태
 };
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
-export function Calendar({ insightDates, selectedDate, onDateSelect }: CalendarProps) {
+export function Calendar({ 
+  insightDates, 
+  selectedDate, 
+  onDateSelect,
+  onMonthChange,
+  isLoading = false,
+}: CalendarProps) {
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [direction, setDirection] = useState(0);
 
@@ -50,12 +58,22 @@ export function Calendar({ insightDates, selectedDate, onDateSelect }: CalendarP
 
   const goToPreviousMonth = () => {
     setDirection(-1);
-    setCurrentMonth(prev => subMonths(prev, 1));
+    setCurrentMonth(prev => {
+      const newMonth = subMonths(prev, 1);
+      // 월 변경 콜백 호출
+      onMonthChange?.(newMonth.getFullYear(), newMonth.getMonth() + 1);
+      return newMonth;
+    });
   };
 
   const goToNextMonth = () => {
     setDirection(1);
-    setCurrentMonth(prev => addMonths(prev, 1));
+    setCurrentMonth(prev => {
+      const newMonth = addMonths(prev, 1);
+      // 월 변경 콜백 호출
+      onMonthChange?.(newMonth.getFullYear(), newMonth.getMonth() + 1);
+      return newMonth;
+    });
   };
 
   const handleDateClick = (date: Date) => {
@@ -121,29 +139,38 @@ export function Calendar({ insightDates, selectedDate, onDateSelect }: CalendarP
       </div>
 
       {/* Calendar Grid */}
-      <AnimatePresence mode="wait" custom={direction}>
-        <motion.div
-          key={currentMonth.toISOString()}
-          custom={direction}
-          variants={variants}
-          initial="enter"
-          animate="center"
-          exit="exit"
-          transition={{ duration: 0.2, ease: 'easeInOut' }}
-          className="grid grid-cols-7 gap-0"
-        >
-          {calendarDays.map((day) => (
-            <CalendarCell
-              key={day.toISOString()}
-              date={day}
-              currentMonth={currentMonth}
-              selectedDate={selectedDate}
-              hasInsight={hasInsight(day)}
-              onClick={handleDateClick}
-            />
-          ))}
-        </motion.div>
-      </AnimatePresence>
+      <div className="relative">
+        <AnimatePresence mode="wait" custom={direction}>
+          <motion.div
+            key={currentMonth.toISOString()}
+            custom={direction}
+            variants={variants}
+            initial="enter"
+            animate="center"
+            exit="exit"
+            transition={{ duration: 0.2, ease: 'easeInOut' }}
+            className={`grid grid-cols-7 gap-0 ${isLoading ? 'opacity-50' : ''}`}
+          >
+            {calendarDays.map((day) => (
+              <CalendarCell
+                key={day.toISOString()}
+                date={day}
+                currentMonth={currentMonth}
+                selectedDate={selectedDate}
+                hasInsight={hasInsight(day)}
+                onClick={handleDateClick}
+              />
+            ))}
+          </motion.div>
+        </AnimatePresence>
+        
+        {/* Loading Overlay */}
+        {isLoading && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-5 h-5 border-2 border-link border-t-transparent rounded-full animate-spin" />
+          </div>
+        )}
+      </div>
     </div>
   );
 }

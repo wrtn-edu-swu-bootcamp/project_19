@@ -105,10 +105,15 @@ export function NoteEditor({ insightDate, initialContent = '', onSave }: NoteEdi
   }, []);
 
   return (
-    <section className="space-y-3">
-      <h2 className="text-title-3 font-semibold">
-        My Insight
-      </h2>
+    <section className="space-y-5">
+      {/* 섹션 헤드라인 - 가운데 정렬 + 양쪽 구분선 */}
+      <div className="flex items-center gap-4 py-2">
+        <div className="flex-1 h-px bg-separator opacity-30" />
+        <h2 className="text-footnote font-semibold text-secondary uppercase tracking-widest">
+          My Insight
+        </h2>
+        <div className="flex-1 h-px bg-separator opacity-30" />
+      </div>
 
       <div className="relative">
         <textarea

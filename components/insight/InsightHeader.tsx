@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
+import { BookmarkButton } from '@/components/ui';
 
 type InsightHeaderProps = {
   date: string; // YYYY-MM-DD format
@@ -41,8 +42,8 @@ export function InsightHeader({ date }: InsightHeaderProps) {
           {formattedDate}
         </h1>
 
-        {/* Placeholder for right side (bookmark button can go here in future) */}
-        <div className="w-11 h-11" aria-hidden="true" />
+        {/* Bookmark Button */}
+        <BookmarkButton date={date} size="md" />
       </div>
     </header>
   );

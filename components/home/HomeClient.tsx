@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { format } from 'date-fns';
 import { Calendar } from '@/components/calendar';
 import { BottomSheet } from '@/components/ui';
@@ -22,42 +22,82 @@ export function HomeClient({
   const [isSheetOpen, setIsSheetOpen] = useState(false);
   const [selectedInsight, setSelectedInsight] = useState<InsightPreviewType | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  
+  // 현재 보고 있는 연도/월과 해당 월의 인사이트 목록
+  const [currentYear, setCurrentYear] = useState(initialYear);
+  const [currentMonth, setCurrentMonth] = useState(initialMonth);
+  const [insights, setInsights] = useState<InsightCalendarItem[]>(initialInsights);
+  const [isMonthLoading, setIsMonthLoading] = useState(false);
 
   // Convert insights to date strings for calendar
-  const insightDates = initialInsights.map(item => item.date);
+  const insightDates = insights.map(item => item.date);
+
+  // 오늘 날짜에 인사이트가 있으면 자동으로 프리뷰 표시
+  useEffect(() => {
+    const today = new Date();
+    const todayStr = format(today, 'yyyy-MM-dd');
+    
+    // 초기 로드 시 오늘 날짜에 인사이트가 있는지 확인
+    if (insightDates.includes(todayStr) && !selectedDate) {
+      // 약간의 딜레이를 주어 자연스러운 UX 제공
+      const timer = setTimeout(() => {
+        handleDateSelect(today);
+      }, 500);
+      
+      return () => clearTimeout(timer);
+    }
+  }, [insightDates]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // 월 변경 시 해당 월의 인사이트 페칭
+  const handleMonthChange = useCallback(async (year: number, month: number) => {
+    // 같은 월이면 무시
+    if (year === currentYear && month === currentMonth) return;
+    
+    setCurrentYear(year);
+    setCurrentMonth(month);
+    setIsMonthLoading(true);
+    
+    try {
+      const response = await fetch(`/api/insights/month/${year}/${month}`);
+      if (response.ok) {
+        const data = await response.json();
+        setInsights(data.insights || []);
+      } else {
+        // API 실패 시 빈 배열로 설정
+        setInsights([]);
+      }
+    } catch (error) {
+      console.error('Failed to fetch monthly insights:', error);
+      setInsights([]);
+    } finally {
+      setIsMonthLoading(false);
+    }
+  }, [currentYear, currentMonth]);
 
   // Fetch insight preview when date is selected
   const handleDateSelect = useCallback(async (date: Date) => {
     setSelectedDate(date);
     const dateStr = format(date, 'yyyy-MM-dd');
     
-    // Check if this date has an insight
-    const hasInsight = insightDates.includes(dateStr);
+    setIsLoading(true);
+    setIsSheetOpen(true);
     
-    if (hasInsight) {
-      setIsLoading(true);
-      setIsSheetOpen(true);
-      
-      try {
-        const response = await fetch(`/api/insights/${dateStr}`);
-        if (response.ok) {
-          const insight = await response.json();
-          setSelectedInsight(insight);
-        } else {
-          setSelectedInsight(null);
-        }
-      } catch (error) {
-        console.error('Failed to fetch insight:', error);
+    try {
+      const response = await fetch(`/api/insights/${dateStr}`);
+      if (response.ok) {
+        const insight = await response.json();
+        setSelectedInsight(insight);
+      } else {
+        // API에서 404 등 반환 시 빈 상태
         setSelectedInsight(null);
-      } finally {
-        setIsLoading(false);
       }
-    } else {
-      // No insight for this date - show empty state
+    } catch (error) {
+      console.error('Failed to fetch insight:', error);
       setSelectedInsight(null);
-      setIsSheetOpen(true);
+    } finally {
+      setIsLoading(false);
     }
-  }, [insightDates]);
+  }, []);
 
   const handleCloseSheet = useCallback(() => {
     setIsSheetOpen(false);
@@ -72,6 +112,8 @@ export function HomeClient({
           insightDates={insightDates}
           selectedDate={selectedDate}
           onDateSelect={handleDateSelect}
+          onMonthChange={handleMonthChange}
+          isLoading={isMonthLoading}
         />
       </section>
 
