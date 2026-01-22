@@ -1,0 +1,239 @@
+@import "tailwindcss";
+
+/* ============================================
+   AI Insight Calendar - Design System
+   Based on Apple HIG + Tailwind CSS 4.1
+   ============================================ */
+
+@theme {
+  /* ========================================
+     Color System
+     ======================================== */
+  
+  /* Primary Labels */
+  --color-label: #000000;
+  --color-label-secondary: #3C3C43;
+  --color-label-tertiary: #3C3C4399;
+  
+  /* Secondary Colors */
+  --color-secondary: #8E8E93;
+  --color-separator: #C6C6C8;
+  
+  /* Background Colors */
+  --color-bg: #FFFFFF;
+  --color-bg-secondary: #F2F2F7;
+  --color-bg-tertiary: #E5E5EA;
+  
+  /* Accent Colors */
+  --color-link: #007AFF;
+  --color-success: #34C759;
+  --color-warning: #FF9500;
+  --color-error: #FF3B30;
+  
+  /* ========================================
+     Typography Scale (SF Pro Style)
+     ======================================== */
+  
+  --font-sans: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", system-ui, sans-serif;
+  
+  /* Font Sizes */
+  --font-size-large-title: 2.125rem;   /* 34pt */
+  --font-size-title-1: 1.75rem;        /* 28pt */
+  --font-size-title-2: 1.375rem;       /* 22pt */
+  --font-size-title-3: 1.25rem;        /* 20pt */
+  --font-size-headline: 1.0625rem;     /* 17pt semibold */
+  --font-size-body: 1.0625rem;         /* 17pt */
+  --font-size-callout: 1rem;           /* 16pt */
+  --font-size-subheadline: 0.9375rem;  /* 15pt */
+  --font-size-footnote: 0.8125rem;     /* 13pt */
+  --font-size-caption-1: 0.75rem;      /* 12pt */
+  --font-size-caption-2: 0.6875rem;    /* 11pt */
+  
+  /* Line Heights */
+  --line-height-headline: 1.2;
+  --line-height-body: 1.5;
+  --line-height-relaxed: 1.75;
+  
+  /* ========================================
+     Spacing (4px Grid)
+     ======================================== */
+  
+  --spacing-1: 0.25rem;   /* 4px */
+  --spacing-2: 0.5rem;    /* 8px */
+  --spacing-3: 0.75rem;   /* 12px */
+  --spacing-4: 1rem;      /* 16px */
+  --spacing-5: 1.25rem;   /* 20px */
+  --spacing-6: 1.5rem;    /* 24px */
+  --spacing-8: 2rem;      /* 32px */
+  --spacing-10: 2.5rem;   /* 40px */
+  
+  /* ========================================
+     Border Radius
+     ======================================== */
+  
+  --radius-sm: 0.5rem;    /* 8px */
+  --radius-md: 0.75rem;   /* 12px */
+  --radius-lg: 1rem;      /* 16px */
+  --radius-xl: 1.25rem;   /* 20px */
+  --radius-full: 9999px;  /* Circular */
+  
+  /* ========================================
+     Shadows (Apple Style)
+     ======================================== */
+  
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.2);
+  --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.25);
+  
+  /* ========================================
+     Animation
+     ======================================== */
+  
+  --duration-quick: 200ms;
+  --duration-standard: 300ms;
+  --duration-relaxed: 400ms;
+  --ease-spring: cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* ============================================
+   Base Styles
+   ============================================ */
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+  
+  html {
+    font-family: var(--font-sans);
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+  
+  body {
+    @apply bg-bg text-label;
+    line-height: var(--line-height-body);
+  }
+  
+  /* Dark Mode */
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --color-label: #FFFFFF;
+      --color-label-secondary: #EBEBF5;
+      --color-label-tertiary: #EBEBF599;
+      --color-secondary: #8E8E93;
+      --color-separator: #38383A;
+      --color-bg: #000000;
+      --color-bg-secondary: #1C1C1E;
+      --color-bg-tertiary: #2C2C2E;
+      --color-link: #0A84FF;
+      --color-success: #30D158;
+      --color-warning: #FF9F0A;
+      --color-error: #FF453A;
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+      --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+      --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.6);
+    }
+  }
+  
+  /* Focus Styles for Accessibility */
+  :focus-visible {
+    outline: 2px solid var(--color-link);
+    outline-offset: 2px;
+  }
+  
+  /* Selection */
+  ::selection {
+    background-color: var(--color-link);
+    color: white;
+  }
+}
+
+/* ============================================
+   Utility Classes
+   ============================================ */
+
+@layer utilities {
+  /* Touch Target (Accessibility) */
+  .touch-target {
+    min-width: 44px;
+    min-height: 44px;
+  }
+  
+  /* Typography Presets */
+  .text-large-title {
+    font-size: var(--font-size-large-title);
+    font-weight: 700;
+    line-height: var(--line-height-headline);
+    letter-spacing: -0.02em;
+  }
+  
+  .text-title-1 {
+    font-size: var(--font-size-title-1);
+    font-weight: 700;
+    line-height: var(--line-height-headline);
+    letter-spacing: -0.01em;
+  }
+  
+  .text-title-2 {
+    font-size: var(--font-size-title-2);
+    font-weight: 700;
+    line-height: var(--line-height-headline);
+  }
+  
+  .text-title-3 {
+    font-size: var(--font-size-title-3);
+    font-weight: 600;
+    line-height: var(--line-height-headline);
+  }
+  
+  .text-headline {
+    font-size: var(--font-size-headline);
+    font-weight: 600;
+    line-height: var(--line-height-headline);
+  }
+  
+  .text-body {
+    font-size: var(--font-size-body);
+    font-weight: 400;
+    line-height: var(--line-height-body);
+  }
+  
+  .text-callout {
+    font-size: var(--font-size-callout);
+    font-weight: 400;
+    line-height: var(--line-height-body);
+  }
+  
+  .text-subheadline {
+    font-size: var(--font-size-subheadline);
+    font-weight: 400;
+    line-height: var(--line-height-body);
+  }
+  
+  .text-footnote {
+    font-size: var(--font-size-footnote);
+    font-weight: 400;
+    line-height: var(--line-height-body);
+  }
+  
+  .text-caption {
+    font-size: var(--font-size-caption-1);
+    font-weight: 400;
+    line-height: var(--line-height-body);
+  }
+  
+  /* Safe Area Padding (Mobile) */
+  .safe-area-inset-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  
+  .safe-area-inset-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+}

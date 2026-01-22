@@ -1,0 +1,163 @@
+# AI Insight Calendar - Cursor Rules
+# Version: 1.0 MVP | Updated: 2026-01-22
+
+## Project Overview
+
+AI-powered daily marketing insight calendar. One curated insight per day via calendar UI.
+Target: Junior marketers, marketing students. Goal: Transform trend consumption into thinking habits.
+
+## Tech Stack (ALWAYS)
+
+- Next.js 15.x + App Router (NO pages directory)
+- React 19 + TypeScript 5.9 strict
+- Tailwind CSS 4.1 (CSS-first, Apple minimalism)
+- Zustand 5.0 (상태 관리)
+- **Vercel Postgres** (데이터베이스)
+- **Google Gemini AI** (인사이트 생성)
+
+## File Structure
+
+```
+app/
+├── page.tsx                    # 메인 캘린더
+├── insight/[date]/page.tsx     # 인사이트 상세
+├── api/insights/generate/route.ts
+├── layout.tsx
+└── globals.css
+
+components/calendar/ insight/ note/ ui/
+lib/ai/gemini.ts db/index.ts
+stores/bookmark-store.ts theme-store.ts
+types/insight.ts note.ts
+```
+
+## Architecture Rules
+
+### Server vs Client Components
+
+DO:
+- Server Components by default
+- Fetch data in Server Components
+- Add 'use client' ONLY for: useState, useEffect, event handlers, browser APIs
+
+DON'T:
+- Client-side everything
+- Use pages directory
+
+## TypeScript
+
+- Strict mode required
+- Define types in types/ directory
+- Use `type` not `interface`
+- NO `any` type
+
+```typescript
+export type Insight = {
+  id: number;
+  date: string;
+  insight_text: string;
+  keywords: { keyword: string; description: string }[];
+  context: string;
+  question: string;
+};
+```
+
+## Design System
+
+### Colors (Tailwind)
+```
+Light: label #000, secondary #8E8E93, bg #FFF, bg-secondary #F2F2F7
+Dark: label #FFF, secondary #8E8E93, bg #000, bg-secondary #1C1C1E
+Link: #007AFF (light) #0A84FF (dark)
+```
+
+### Spacing (4px grid only)
+Use: 4, 8, 12, 16, 20, 24, 32, 40px
+
+### Accessibility
+- Min contrast: 4.5:1
+- Min touch target: 44x44px
+
+## Database Pattern (Vercel Postgres)
+
+```typescript
+import { sql } from '@vercel/postgres';
+
+export async function getInsightByDate(date: string) {
+  const { rows } = await sql`
+    SELECT * FROM insights WHERE date = ${date}
+  `;
+  return rows[0] || null;
+}
+```
+
+## AI Generation (Gemini)
+
+```typescript
+import { GoogleGenerativeAI } from '@google/generative-ai';
+
+const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+
+export async function generateInsight(date: string) {
+  const model = genAI.getGenerativeModel({ model: 'gemini-1.5-flash' });
+  const result = await model.generateContent(prompt);
+  return JSON.parse(result.response.text());
+}
+```
+
+### Quality Criteria (ALL required)
+1. Timely: Last 2 weeks trends
+2. Specific: Concrete, not abstract
+3. Evidence-based: Data backed
+4. Actionable: Marketers can apply
+
+## API Route Pattern
+
+```typescript
+import { NextRequest, NextResponse } from 'next/server';
+
+export async function POST(request: NextRequest) {
+  const auth = request.headers.get('authorization');
+  if (auth !== `Bearer ${process.env.CRON_SECRET}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+  // ... logic
+  return NextResponse.json({ success: true });
+}
+```
+
+## Environment Variables
+
+```bash
+# Server-only (NO prefix)
+DATABASE_URL=postgres://...      # Vercel Postgres (자동 설정됨)
+GEMINI_API_KEY=...               # Google AI Studio
+CRON_SECRET=...                  # Cron 인증용
+```
+
+## Performance
+
+```tsx
+// Image optimization
+import Image from 'next/image';
+
+// Code splitting
+import dynamic from 'next/dynamic';
+const Sheet = dynamic(() => import('@/components/ui/BottomSheet'), { ssr: false });
+```
+
+## Dev Commands
+
+```bash
+npm run dev
+npm run build
+npm run type-check
+```
+
+## AI Assistant Notes
+
+- Single-developer MVP
+- Prioritize simplicity
+- Apple minimalism
+- Mobile PRIMARY
+- Core value: daily thinking habit
