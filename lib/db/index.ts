@@ -21,14 +21,19 @@ export async function getInsightByDate(date: string): Promise<Insight | null> {
     WHERE date = ${date}
   `;
   
-  if (rows.length === 0) return null;
+  const row = rows[0];
+  if (!row) return null;
   
   return {
-    ...rows[0],
-    date: formatDate(rows[0].date),
-    keywords: typeof rows[0].keywords === 'string' 
-      ? JSON.parse(rows[0].keywords) 
-      : rows[0].keywords,
+    id: row.id,
+    date: formatDate(row.date),
+    insight_text: row.insight_text,
+    keywords: typeof row.keywords === 'string' 
+      ? JSON.parse(row.keywords) 
+      : row.keywords,
+    context: row.context,
+    question: row.question,
+    created_at: row.created_at,
   };
 }
 
@@ -85,11 +90,15 @@ export async function getRecentInsights(limit: number = 7): Promise<Insight[]> {
   `;
   
   return rows.map(row => ({
-    ...row,
+    id: row.id,
     date: formatDate(row.date),
+    insight_text: row.insight_text,
     keywords: typeof row.keywords === 'string' 
       ? JSON.parse(row.keywords) 
       : row.keywords,
+    context: row.context,
+    question: row.question,
+    created_at: row.created_at,
   }));
 }
 
@@ -110,11 +119,16 @@ export async function getNoteByDate(
     WHERE insight_date = ${date} AND user_id = ${userId}
   `;
   
-  if (rows.length === 0) return null;
+  const row = rows[0];
+  if (!row) return null;
   
   return {
-    ...rows[0],
-    insight_date: formatDate(rows[0].insight_date),
+    id: row.id,
+    insight_date: formatDate(row.insight_date),
+    user_id: row.user_id,
+    content: row.content,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
   };
 }
 
@@ -131,9 +145,18 @@ export async function saveNote(note: NoteInsert): Promise<Note> {
     RETURNING id, insight_date, user_id, content, created_at, updated_at
   `;
   
+  const row = rows[0];
+  if (!row) {
+    throw new Error('Failed to save note');
+  }
+  
   return {
-    ...rows[0],
-    insight_date: formatDate(rows[0].insight_date),
+    id: row.id,
+    insight_date: formatDate(row.insight_date),
+    user_id: row.user_id,
+    content: row.content,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
   };
 }
 
@@ -149,8 +172,12 @@ export async function getNotesByUser(userId: string): Promise<Note[]> {
   `;
   
   return rows.map(row => ({
-    ...row,
+    id: row.id,
     insight_date: formatDate(row.insight_date),
+    user_id: row.user_id,
+    content: row.content,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
   }));
 }
 
@@ -171,9 +198,10 @@ export async function deleteNote(id: number): Promise<void> {
 function formatDate(date: Date | string): string {
   if (typeof date === 'string') {
     // 이미 문자열이면 날짜 부분만 추출
-    return date.split('T')[0];
+    const parts = date.split('T');
+    return parts[0] ?? date.slice(0, 10);
   }
-  return date.toISOString().split('T')[0];
+  return date.toISOString().slice(0, 10);
 }
 
 /**

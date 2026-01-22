@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from 'next';
+import { ThemeProvider } from '@/components/providers';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -60,9 +61,11 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
       </head>
       <body className="min-h-screen bg-bg text-label antialiased">
-        <main className="relative flex min-h-screen flex-col">
-          {children}
-        </main>
+        <ThemeProvider>
+          <main className="relative flex min-h-screen flex-col">
+            {children}
+          </main>
+        </ThemeProvider>
       </body>
     </html>
   );

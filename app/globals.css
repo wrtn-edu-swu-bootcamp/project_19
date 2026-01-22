@@ -119,9 +119,9 @@
     line-height: var(--line-height-body);
   }
   
-  /* Dark Mode */
+  /* Dark Mode - System preference */
   @media (prefers-color-scheme: dark) {
-    :root {
+    :root:not(.light) {
       --color-label: #FFFFFF;
       --color-label-secondary: #EBEBF5;
       --color-label-tertiary: #EBEBF599;
@@ -139,6 +139,26 @@
       --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
       --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.6);
     }
+  }
+  
+  /* Dark Mode - Manual override via .dark class */
+  :root.dark {
+    --color-label: #FFFFFF;
+    --color-label-secondary: #EBEBF5;
+    --color-label-tertiary: #EBEBF599;
+    --color-secondary: #8E8E93;
+    --color-separator: #38383A;
+    --color-bg: #000000;
+    --color-bg-secondary: #1C1C1E;
+    --color-bg-tertiary: #2C2C2E;
+    --color-link: #0A84FF;
+    --color-success: #30D158;
+    --color-warning: #FF9F0A;
+    --color-error: #FF453A;
+    --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+    --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+    --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+    --shadow-xl: 0 12px 40px rgba(0, 0, 0, 0.6);
   }
   
   /* Focus Styles for Accessibility */

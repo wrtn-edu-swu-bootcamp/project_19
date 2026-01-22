@@ -159,44 +159,55 @@ export async function POST(request: NextRequest) {
 
 ---
 
-## Phase 4: UI 컴포넌트 (최소 필수)
+## Phase 4: UI 컴포넌트 (최소 필수) ✅ 완료
 
 ### 4-1. 기본 컴포넌트
-- [ ] components/ui/Button.tsx
-- [ ] components/ui/BottomSheet.tsx (모바일 인사이트 프리뷰)
+- [x] components/ui/Button.tsx
+- [x] components/ui/BottomSheet.tsx (모바일 인사이트 프리뷰)
 
 ### 4-2. 캘린더
-- [ ] components/calendar/Calendar.tsx (월간 뷰)
-- [ ] components/calendar/CalendarCell.tsx (날짜 셀)
+- [x] components/calendar/Calendar.tsx (월간 뷰)
+- [x] components/calendar/CalendarCell.tsx (날짜 셀)
 
 ### 4-3. 인사이트
-- [ ] components/insight/InsightPreview.tsx (바텀시트 내용)
-- [ ] components/insight/InsightDetail.tsx (상세 페이지)
+- [x] components/insight/InsightPreview.tsx (바텀시트 내용)
+- [x] components/insight/InsightDetail.tsx (상세 페이지)
 
 ### 4-4. 노트
-- [ ] components/note/NoteEditor.tsx (자동저장 textarea)
+- [x] components/note/NoteEditor.tsx (자동저장 textarea)
 
 ---
 
-## Phase 5: 페이지 개발
+## Phase 5: 페이지 개발 ✅ 완료
 
 ### 5-1. 메인 페이지
-- [ ] app/page.tsx - 캘린더 표시
-- [ ] 날짜 클릭 시 바텀시트로 인사이트 프리뷰
+- [x] app/(home)/page.tsx - 캘린더 표시
+- [x] 날짜 클릭 시 바텀시트로 인사이트 프리뷰
+- [x] components/home/HomeClient.tsx - 클라이언트 상태 관리
+- [x] app/api/insights/[date]/route.ts - 인사이트 조회 API
 
 ### 5-2. 인사이트 상세
-- [ ] app/insight/[date]/page.tsx
-- [ ] 인사이트 전체 내용 + 노트 에디터
+- [x] app/insight/[date]/page.tsx
+- [x] 인사이트 전체 내용 + 노트 에디터
+- [x] components/insight/InsightHeader.tsx - 뒤로가기 헤더
 
 ### 5-3. 레이아웃
-- [ ] app/layout.tsx - 메타데이터, 폰트, 다크모드
+- [x] app/layout.tsx - 메타데이터, 폰트, 다크모드 (Phase 1에서 완료)
 
 ---
 
-## Phase 6: 상태 관리 (Zustand)
+## Phase 6: 상태 관리 (Zustand) ✅ 완료
 
-- [ ] stores/bookmark-store.ts (북마크 저장, localStorage persist)
-- [ ] stores/theme-store.ts (다크/라이트 모드)
+- [x] stores/bookmark-store.ts (북마크 저장, localStorage persist)
+- [x] stores/theme-store.ts (다크/라이트 모드)
+- [x] stores/index.ts (Store export 통합)
+- [x] components/providers/ThemeProvider.tsx (테마 적용 Provider)
+- [x] components/ui/BookmarkButton.tsx (북마크 토글 버튼)
+- [x] components/ui/ThemeToggle.tsx (테마 전환 UI)
+- [x] globals.css 수정 (.dark 클래스 기반 다크모드 지원)
+- [x] layout.tsx 수정 (ThemeProvider 적용)
+- [x] InsightPreview.tsx에 북마크 버튼 추가
+- [x] InsightDetail.tsx에 북마크 버튼 추가
 
 ---
 
@@ -228,7 +239,7 @@ export async function POST(request: NextRequest) {
 ## 진행 상황
 
 ### 완료율
-**12 / 35 항목 완료 (34%)**
+**36 / 45 항목 완료 (80%)**
 
 ### 핵심 의존성
 ```json
