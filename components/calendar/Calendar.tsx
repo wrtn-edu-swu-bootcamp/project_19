@@ -3,18 +3,18 @@
 import { useState, useCallback, useMemo } from 'react';
 import { 
   startOfMonth, 
-  endOfMonth, 
+  endOfMonth,
   startOfWeek, 
-  endOfWeek, 
+  endOfWeek,
   eachDayOfInterval,
   addMonths,
   subMonths,
   format,
-  isSameDay,
 } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
 import { CalendarCell } from './CalendarCell';
+import { useTranslation } from '@/lib/i18n';
 
 type CalendarProps = {
   insightDates: string[]; // Array of dates with insights (YYYY-MM-DD format)
@@ -24,7 +24,53 @@ type CalendarProps = {
   isLoading?: boolean; // 데이터 로딩 중 상태
 };
 
-const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+// 한국 공휴일 (고정 공휴일 + 2026년 음력 공휴일)
+// 형식: 'MM-DD' (고정) 또는 'YYYY-MM-DD' (특정 연도)
+const KOREAN_HOLIDAYS: Record<string, string> = {
+  // 고정 공휴일 (매년 동일)
+  '01-01': '신정',
+  '03-01': '삼일절',
+  '05-05': '어린이날',
+  '06-06': '현충일',
+  '08-15': '광복절',
+  '10-03': '개천절',
+  '10-09': '한글날',
+  '12-25': '성탄절',
+  
+  // 2026년 설날 (음력 1월 1일 = 2026년 2월 17일)
+  '2026-02-16': '설날 연휴',
+  '2026-02-17': '설날',
+  '2026-02-18': '설날 연휴',
+  
+  // 2026년 부처님 오신 날 (음력 4월 8일 = 2026년 5월 24일)
+  '2026-05-24': '부처님 오신 날',
+  
+  // 2026년 추석 (음력 8월 15일 = 2026년 10월 5일)
+  '2026-10-04': '추석 연휴',
+  '2026-10-05': '추석',
+  '2026-10-06': '추석 연휴',
+  
+  // 2025년 설날
+  '2025-01-28': '설날 연휴',
+  '2025-01-29': '설날',
+  '2025-01-30': '설날 연휴',
+  
+  // 2025년 부처님 오신 날
+  '2025-05-05': '부처님 오신 날',
+  
+  // 2025년 추석
+  '2025-10-05': '추석 연휴',
+  '2025-10-06': '추석',
+  '2025-10-07': '추석 연휴',
+};
+
+// 공휴일 체크 함수
+function isKoreanHoliday(date: Date): boolean {
+  const fullDateStr = format(date, 'yyyy-MM-dd');
+  const monthDayStr = format(date, 'MM-dd');
+  
+  return fullDateStr in KOREAN_HOLIDAYS || monthDayStr in KOREAN_HOLIDAYS;
+}
 
 export function Calendar({ 
   insightDates, 
@@ -33,6 +79,10 @@ export function Calendar({
   onMonthChange,
   isLoading = false,
 }: CalendarProps) {
+  const { ta } = useTranslation();
+  const weekdays = ta('calendar.weekdays');
+  const dateLocale = ko;
+
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [direction, setDirection] = useState(0);
 
@@ -109,7 +159,7 @@ export function Calendar({
           <ChevronLeftIcon />
         </button>
 
-        <h2 className="text-title-1 font-bold">
+        <h2 className="text-title-2 font-semibold">
           {format(currentMonth, 'yyyy년 M월', { locale: ko })}
         </h2>
 
@@ -125,7 +175,7 @@ export function Calendar({
 
       {/* Weekday Headers */}
       <div className="grid grid-cols-7 gap-0 mb-2">
-        {WEEKDAYS.map((day, index) => (
+        {weekdays.map((day, index) => (
           <div
             key={day}
             className={`
@@ -138,8 +188,8 @@ export function Calendar({
         ))}
       </div>
 
-      {/* Calendar Grid */}
-      <div className="relative">
+      {/* Calendar Grid - 최소 높이 고정으로 레이아웃 일관성 유지 */}
+      <div className="relative min-h-[264px]">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={currentMonth.toISOString()}
@@ -158,6 +208,7 @@ export function Calendar({
                 currentMonth={currentMonth}
                 selectedDate={selectedDate}
                 hasInsight={hasInsight(day)}
+                isHoliday={isKoreanHoliday(day)}
                 onClick={handleDateClick}
               />
             ))}

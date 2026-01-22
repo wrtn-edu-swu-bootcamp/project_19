@@ -57,7 +57,7 @@ export default async function InsightPage({ params }: PageProps) {
     console.error('Failed to fetch insight:', error);
     // Show error state instead of crashing
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-bg-secondary">
         <InsightHeader date={date} />
         <main className="flex-1 flex items-center justify-center px-5">
           <div className="text-center">
@@ -76,7 +76,7 @@ export default async function InsightPage({ params }: PageProps) {
   // If no insight found for this date
   if (!insight) {
     return (
-      <div className="min-h-screen flex flex-col">
+      <div className="min-h-screen flex flex-col bg-bg-secondary">
         <InsightHeader date={date} />
         <main className="flex-1 flex items-center justify-center px-5">
           <EmptyInsightState date={date} />
@@ -86,8 +86,8 @@ export default async function InsightPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col">
-      <InsightHeader date={date} />
+    <div className="min-h-screen flex flex-col bg-bg-secondary">
+      <InsightHeader date={date} insightText={insight.insight_text} />
       
       <main className="flex-1 px-5 py-6 max-w-[600px] mx-auto w-full">
         {/* Insight Content */}

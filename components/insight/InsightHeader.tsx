@@ -1,49 +1,69 @@
 'use client';
 
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname } from 'next/navigation';
+import { useEffect, useState } from 'react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { BookmarkButton } from '@/components/ui';
+import { useTranslation } from '@/lib/i18n';
 
 type InsightHeaderProps = {
   date: string; // YYYY-MM-DD format
+  insightText?: string;
 };
 
-export function InsightHeader({ date }: InsightHeaderProps) {
+export function InsightHeader({ date, insightText = '' }: InsightHeaderProps) {
   const router = useRouter();
+  const pathname = usePathname();
+  const { ts } = useTranslation();
+  const [backLabel, setBackLabel] = useState(ts('detail.back'));
+  const [backPath, setBackPath] = useState('/');
+  
   const formattedDate = format(new Date(date), 'M월 d일 EEEE', { locale: ko });
 
+  useEffect(() => {
+    // 이전 페이지가 북마크 페이지인지 확인
+    if (typeof window !== 'undefined') {
+      const referrer = document.referrer;
+      if (referrer.includes('/bookmarks')) {
+        setBackLabel('북마크');
+        setBackPath('/bookmarks');
+      } else {
+        setBackLabel(ts('detail.back'));
+        setBackPath('/');
+      }
+    }
+  }, [ts]);
+
   const handleBack = () => {
-    router.back();
+    router.push(backPath);
   };
 
   return (
-    <header className="sticky top-0 z-10 bg-bg/80 backdrop-blur-md border-b border-separator">
-      <div className="flex items-center justify-between px-4 h-14 max-w-[600px] mx-auto">
-        {/* Back Button */}
-        <button
-          type="button"
-          onClick={handleBack}
-          className="
-            flex items-center gap-1
-            text-link text-body font-medium
-            touch-target
-            hover:opacity-80 active:opacity-60
-            transition-opacity duration-quick
-          "
-          aria-label="뒤로 가기"
-        >
-          <ChevronLeftIcon />
-          <span>캘린더</span>
-        </button>
+    <header className="sticky top-0 z-10 bg-bg-secondary/80 backdrop-blur-xl border-b border-separator/30">
+      <div className="w-full max-w-[600px] mx-auto px-5 py-3">
+        <div className="relative flex items-center justify-center h-8">
+          {/* Back Button - 왼쪽 고정 */}
+          <button
+            type="button"
+            onClick={handleBack}
+            className="absolute left-0 flex items-center gap-0.5 text-label font-medium hover:opacity-80 transition-opacity"
+            aria-label="뒤로 가기"
+          >
+            <ChevronLeftIcon />
+            <span className="text-footnote">{backLabel}</span>
+          </button>
 
-        {/* Date */}
-        <h1 className="text-headline font-semibold">
-          {formattedDate}
-        </h1>
+          {/* Date - 가운데 */}
+          <h1 className="text-subheadline font-semibold">
+            {formattedDate}
+          </h1>
 
-        {/* Bookmark Button */}
-        <BookmarkButton date={date} size="md" />
+          {/* Bookmark Button - 오른쪽 고정 */}
+          <div className="absolute right-0">
+            <BookmarkButton date={date} insightText={insightText} size="sm" />
+          </div>
+        </div>
       </div>
     </header>
   );

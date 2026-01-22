@@ -105,32 +105,25 @@ export function NoteEditor({ insightDate, initialContent = '', onSave }: NoteEdi
   }, []);
 
   return (
-    <section className="space-y-5">
-      {/* 섹션 헤드라인 - 가운데 정렬 + 양쪽 구분선 */}
-      <div className="flex items-center gap-4 py-2">
-        <div className="flex-1 h-px bg-separator opacity-30" />
-        <h2 className="text-footnote font-semibold text-secondary uppercase tracking-widest">
-          My Insight
-        </h2>
-        <div className="flex-1 h-px bg-separator opacity-30" />
-      </div>
+    <section className="space-y-3">
+      {/* 섹션 헤드라인 - 설정 페이지와 동일한 스타일 */}
+      <h2 className="text-caption font-normal text-secondary uppercase tracking-wide px-1">
+        My Insight
+      </h2>
 
-      <div className="relative">
+      <div className="relative rounded-xl bg-bg p-4">
         <textarea
           ref={textareaRef}
           value={content}
           onChange={handleChange}
           placeholder="이 인사이트에 대한 생각을 자유롭게 적어보세요"
           className="
-            w-full min-h-[120px] max-h-[300px]
-            p-4
-            bg-bg-secondary
-            rounded-md
-            text-body text-label
+            w-full min-h-[100px] max-h-[200px]
+            bg-transparent
+            text-footnote text-label
             placeholder:text-secondary
             resize-none
             outline-none
-            focus:ring-2 focus:ring-link focus:ring-opacity-50
             transition-all duration-quick
           "
           aria-label="인사이트 노트"
@@ -144,9 +137,9 @@ export function NoteEditor({ insightDate, initialContent = '', onSave }: NoteEdi
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -4 }}
               transition={{ duration: 0.2 }}
-              className="absolute bottom-2 right-3"
+              className="absolute bottom-4 right-4"
             >
-              <span className="text-footnote text-secondary flex items-center gap-1">
+              <span className="text-caption text-secondary flex items-center gap-1">
                 {isSaving ? (
                   <>
                     <LoadingDots />
@@ -155,7 +148,7 @@ export function NoteEditor({ insightDate, initialContent = '', onSave }: NoteEdi
                 ) : (
                   <>
                     <CheckIcon />
-                    자동 저장됨
+                    저장됨
                   </>
                 )}
               </span>

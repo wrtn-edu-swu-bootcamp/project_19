@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { ThemeProvider } from '@/components/providers';
+import { ThemeProvider, SettingsProvider } from '@/components/providers';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -62,9 +62,11 @@ export default function RootLayout({
       </head>
       <body className="min-h-screen bg-bg text-label antialiased">
         <ThemeProvider>
-          <main className="relative flex min-h-screen flex-col">
-            {children}
-          </main>
+          <SettingsProvider>
+            <main className="relative flex min-h-screen flex-col">
+              {children}
+            </main>
+          </SettingsProvider>
         </ThemeProvider>
       </body>
     </html>

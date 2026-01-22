@@ -4,6 +4,7 @@ import { useBookmarkStore } from '@/stores';
 
 type BookmarkButtonProps = {
   date: string;
+  insightText?: string;
   size?: 'sm' | 'md' | 'lg';
   showLabel?: boolean;
   className?: string;
@@ -11,6 +12,7 @@ type BookmarkButtonProps = {
 
 export function BookmarkButton({ 
   date, 
+  insightText = '',
   size = 'md', 
   showLabel = false,
   className = '' 
@@ -31,7 +33,7 @@ export function BookmarkButton({
   };
 
   const handleClick = () => {
-    toggleBookmark(date);
+    toggleBookmark(date, insightText);
   };
 
   return (
