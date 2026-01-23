@@ -73,7 +73,7 @@ export function BottomSheet({ isOpen, onClose, children }: BottomSheetProps) {
             dragConstraints={{ top: 0, bottom: 0 }}
             dragElastic={{ top: 0, bottom: 0.5 }}
             onDragEnd={handleDragEnd}
-            className="fixed bottom-0 left-0 right-0 z-50 bg-bg rounded-t-lg shadow-xl max-h-[85vh] overflow-hidden"
+            className="fixed bottom-0 left-0 right-0 z-50 bg-bg rounded-t-lg shadow-xl max-h-[80vh] overflow-hidden"
             role="dialog"
             aria-modal="true"
           >
@@ -86,7 +86,7 @@ export function BottomSheet({ isOpen, onClose, children }: BottomSheetProps) {
             </div>
 
             {/* Content */}
-            <div className="px-0 pb-3 overflow-y-auto max-h-[calc(85vh-44px)] safe-area-inset-bottom">
+            <div className="px-0 py-4 overflow-y-auto max-h-[calc(80vh-44px)]">
               {children}
             </div>
           </motion.div>

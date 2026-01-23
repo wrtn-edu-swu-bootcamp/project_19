@@ -40,13 +40,13 @@ export function InsightPreview({ insight, onClose, onNavigateDate }: InsightPrev
   };
 
   return (
-    <div className="space-y-3 sm:space-y-4 relative min-h-[300px] pt-1 pb-2">
+    <div className="space-y-3 sm:space-y-4 relative w-full py-3">
       {/* 이전 날짜 화살표 버튼 - 왼쪽 끝 */}
       <button
         type="button"
         onClick={handlePrevDate}
         className="
-          absolute left-0 top-[40%] -translate-y-1/2
+          absolute left-0 top-1/2 -translate-y-1/2
           w-10 h-10
           flex items-center justify-center
           text-secondary hover:text-label
@@ -63,7 +63,7 @@ export function InsightPreview({ insight, onClose, onNavigateDate }: InsightPrev
         type="button"
         onClick={handleNextDate}
         className="
-          absolute right-0 top-[40%] -translate-y-1/2
+          absolute right-0 top-1/2 -translate-y-1/2
           w-10 h-10
           flex items-center justify-center
           text-secondary hover:text-label
