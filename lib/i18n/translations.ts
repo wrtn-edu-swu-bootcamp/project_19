@@ -17,7 +17,7 @@ export const translations = {
   'preview.viewDetail': '자세히 보기',
   'preview.loading': '불러오는 중',
   'preview.noInsight': '인사이트가 없습니다',
-  'preview.noInsightDesc': '아직 준비되지 않았어요\n매일 오전 7시 새로운 인사이트가 업데이트됩니다',
+  'preview.noInsightDesc': '아직 준비되지 않았어요\n매일 오전 6시 새로운 인사이트가 업데이트됩니다',
   
   // 상세 페이지
   'detail.todayInsight': "Today's Insight",

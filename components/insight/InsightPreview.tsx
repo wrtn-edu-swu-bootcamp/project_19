@@ -1,6 +1,6 @@
 'use client';
 
-import { format, isToday } from 'date-fns';
+import { format, isToday, subDays, addDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import Link from 'next/link';
 import { BookmarkButton } from '@/components/ui';
@@ -10,9 +10,10 @@ import type { InsightPreview as InsightPreviewType } from '@/types/insight';
 type InsightPreviewProps = {
   insight: InsightPreviewType;
   onClose?: () => void;
+  onNavigateDate?: (date: Date) => void;
 };
 
-export function InsightPreview({ insight, onClose }: InsightPreviewProps) {
+export function InsightPreview({ insight, onClose, onNavigateDate }: InsightPreviewProps) {
   const { ts } = useTranslation();
   
   const insightDate = new Date(insight.date);
@@ -20,8 +21,62 @@ export function InsightPreview({ insight, onClose }: InsightPreviewProps) {
   const isTodayInsight = isToday(insightDate);
   const detailPath = `/insight/${insight.date}`;
 
+  // 이전/다음 날짜 계산
+  const prevDate = subDays(insightDate, 1);
+  const nextDate = addDays(insightDate, 1);
+  const prevDateStr = format(prevDate, 'yyyy-MM-dd');
+  const nextDateStr = format(nextDate, 'yyyy-MM-dd');
+
+  const handlePrevDate = () => {
+    if (onNavigateDate) {
+      onNavigateDate(prevDate);
+    }
+  };
+
+  const handleNextDate = () => {
+    if (onNavigateDate) {
+      onNavigateDate(nextDate);
+    }
+  };
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-5 relative px-12">
+      {/* 이전 날짜 화살표 버튼 - 왼쪽 */}
+      <button
+        type="button"
+        onClick={handlePrevDate}
+        className="
+          absolute left-0 top-1/2 -translate-y-1/2
+          w-10 h-10
+          flex items-center justify-center
+          text-secondary hover:text-label
+          active:scale-95
+          transition-all duration-quick
+          z-10
+        "
+        aria-label="이전 날짜"
+      >
+        <ChevronLeftIcon />
+      </button>
+
+      {/* 다음 날짜 화살표 버튼 - 오른쪽 */}
+      <button
+        type="button"
+        onClick={handleNextDate}
+        className="
+          absolute right-0 top-1/2 -translate-y-1/2
+          w-10 h-10
+          flex items-center justify-center
+          text-secondary hover:text-label
+          active:scale-95
+          transition-all duration-quick
+          z-10
+        "
+        aria-label="다음 날짜"
+      >
+        <ChevronRightIcon />
+      </button>
+
       {/* Header with Date Badge and Bookmark */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
@@ -92,6 +147,42 @@ function ArrowRightIcon() {
       stroke="currentColor" 
       strokeWidth="2.5" 
       strokeLinecap="round" 
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points="9 18 15 12 9 6" />
+    </svg>
+  );
+}
+
+function ChevronLeftIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
+  );
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
       strokeLinejoin="round"
       aria-hidden="true"
     >

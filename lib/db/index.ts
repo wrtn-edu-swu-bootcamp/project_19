@@ -13,7 +13,9 @@ import type { Note, NoteInsert } from '@/types/note';
 // Mock Data for Development (DB 연결 없을 때 사용)
 // =============================================
 
-const MOCK_INSIGHTS: Insight[] = [
+// Mock 데이터를 동적으로 생성하는 함수
+function getMockInsights(): Insight[] {
+  return [
   {
     id: 1,
     date: getTodayString(),
@@ -105,19 +107,36 @@ const MOCK_INSIGHTS: Insight[] = [
     question: "우리 제품이 고객에게 '발견'되는 순간을 어떻게 설계하고 있는가?",
     created_at: new Date().toISOString(),
   },
-];
-
-// 오늘 날짜 문자열 (YYYY-MM-DD)
-function getTodayString(): string {
-  const now = new Date();
-  return now.toISOString().split('T')[0]!;
+  ];
 }
 
-// N일 전/후 날짜 문자열
+/**
+ * KST(한국 표준시) 기준 오늘 날짜를 YYYY-MM-DD 형식으로 반환
+ */
+function getTodayString(): string {
+  const now = new Date();
+  // KST는 UTC+9
+  const kstOffset = 9 * 60 * 60 * 1000;
+  const kstDate = new Date(now.getTime() + kstOffset);
+  
+  const isoString = kstDate.toISOString();
+  const datePart = isoString.split('T')[0];
+  return datePart ?? isoString.slice(0, 10);
+}
+
+/**
+ * KST 기준 N일 전/후 날짜 문자열
+ */
 function getDateString(daysOffset: number): string {
-  const date = new Date();
-  date.setDate(date.getDate() + daysOffset);
-  return date.toISOString().split('T')[0]!;
+  const now = new Date();
+  // KST는 UTC+9
+  const kstOffset = 9 * 60 * 60 * 1000;
+  const kstDate = new Date(now.getTime() + kstOffset);
+  kstDate.setDate(kstDate.getDate() + daysOffset);
+  
+  const isoString = kstDate.toISOString();
+  const datePart = isoString.split('T')[0];
+  return datePart ?? isoString.slice(0, 10);
 }
 
 // DB 연결 여부 확인
@@ -136,7 +155,7 @@ export async function getInsightByDate(date: string): Promise<Insight | null> {
   // DB 연결이 없으면 Mock 데이터 사용
   if (!hasDbConnection()) {
     console.log('[DEV] Using mock data for getInsightByDate:', date);
-    const insight = MOCK_INSIGHTS.find(i => i.date === date);
+    const insight = getMockInsights().find(i => i.date === date);
     return insight || null;
   }
 
@@ -198,7 +217,7 @@ export async function getInsightsByMonth(
     const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
     const endDate = `${year}-${String(month).padStart(2, '0')}-31`;
     
-    return MOCK_INSIGHTS
+    return getMockInsights()
       .filter(i => i.date >= startDate && i.date <= endDate)
       .map(i => ({
         date: i.date,
@@ -231,7 +250,7 @@ export async function getRecentInsights(limit: number = 7): Promise<Insight[]> {
   // DB 연결이 없으면 Mock 데이터 사용
   if (!hasDbConnection()) {
     console.log('[DEV] Using mock data for getRecentInsights:', limit);
-    return MOCK_INSIGHTS.slice(0, limit);
+    return getMockInsights().slice(0, limit);
   }
 
   const { rows } = await sql<Insight>`

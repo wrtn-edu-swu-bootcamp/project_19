@@ -7,7 +7,9 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "type-check": "tsc --noEmit"
+    "type-check": "tsc --noEmit",
+    "setup": "node scripts/setup-env.js",
+    "generate:today": "node scripts/generate-today-insight.js"
   },
   "dependencies": {
     "@google/generative-ai": "^0.21.0",

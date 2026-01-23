@@ -6,8 +6,9 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 import type { InsightKeyword } from '@/types/insight';
 
-// Gemini 클라이언트 초기화
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+// Gemini 클라이언트 초기화 (API 키가 없으면 null)
+const apiKey = process.env.GEMINI_API_KEY;
+const genAI = apiKey ? new GoogleGenerativeAI(apiKey) : null;
 
 // 생성된 인사이트 타입 (DB 저장 전)
 export type GeneratedInsight = {
@@ -18,11 +19,64 @@ export type GeneratedInsight = {
 };
 
 /**
+ * API 키가 없을 때 사용할 샘플 인사이트 생성
+ */
+function generateSampleInsight(date: string): GeneratedInsight {
+  const sampleInsights = [
+    {
+      insight_text: "요즘 브랜드는 혜택보다 선택 이유를 설계한다",
+      keywords: [
+        { keyword: "브랜드 스토리텔링", description: "단순한 제품 기능을 넘어 가치로 전달" },
+        { keyword: "선택 피로감", description: "명확한 이유가 많은 옵션보다 중요함" },
+        { keyword: "가치 기반 소비", description: "Z세대는 가격에서 의미로 전환 중" }
+      ],
+      context: "최근 소비자들은 제품 기능이나 할인보다 '왜 이 브랜드를 선택해야 하는가'에 더 민감하게 반응합니다. 특히 Z세대는 브랜드의 가치관과 자신의 정체성이 일치하는지를 중요하게 생각합니다.",
+      question: "우리 브랜드가 제공하는 선택 이유는 명확한가? 고객에게 어떤 가치를 전달하고 있는가?"
+    },
+    {
+      insight_text: "Z세대는 광고를 콘텐츠로 소비한다",
+      keywords: [
+        { keyword: "광고 네이티브", description: "광고와 콘텐츠의 경계가 흐려짐" },
+        { keyword: "숏폼 크리에이티브", description: "15초 안에 브랜드 메시지 전달" },
+        { keyword: "밈 마케팅", description: "공유 가능한 형태의 브랜드 커뮤니케이션" }
+      ],
+      context: "Z세대에게 광고는 더 이상 '스킵해야 할 것'이 아닙니다. 재미있고 공유할 만한 광고는 오히려 적극적으로 찾아보고 친구들과 나눕니다. 이는 광고의 형식보다 콘텐츠의 질이 중요해졌음을 의미합니다.",
+      question: "우리 브랜드의 광고는 사람들이 자발적으로 공유하고 싶어하는가?"
+    },
+    {
+      insight_text: "개인화를 넘어 '맥락화'가 승부를 가른다",
+      keywords: [
+        { keyword: "상황 인식 마케팅", description: "고객의 현재 상황과 맥락을 파악" },
+        { keyword: "마이크로 모먼트", description: "결정적 순간에 적절한 메시지 전달" },
+        { keyword: "예측적 개인화", description: "필요를 미리 예측하여 제안" }
+      ],
+      context: "이름과 구매 이력 기반 개인화는 이제 기본입니다. 진정한 차별화는 고객이 '지금 무엇이 필요한지'를 상황과 맥락에서 파악하여 적절한 타이밍에 제안하는 것입니다.",
+      question: "우리는 고객의 상황과 맥락을 얼마나 이해하고 활용하고 있는가?"
+    }
+  ];
+  
+  // 날짜 기반으로 샘플 선택 (일관성 유지)
+  const dateNum = parseInt(date.replace(/-/g, ''), 10);
+  const index = dateNum % sampleInsights.length;
+  return sampleInsights[index]!;
+}
+
+/**
  * AI를 사용하여 마케팅 인사이트 생성
+ * API 키가 없으면 샘플 인사이트 반환
  * @param date - 인사이트 날짜 (YYYY-MM-DD)
  * @returns 생성된 인사이트 객체
  */
 export async function generateInsight(date: string): Promise<GeneratedInsight> {
+  // API 키가 없으면 샘플 인사이트 반환
+  if (!genAI || !apiKey) {
+    console.warn('[AI] GEMINI_API_KEY가 설정되지 않아 샘플 인사이트를 사용합니다.');
+    console.warn('[AI] 실제 AI 인사이트를 사용하려면 .env.local에 GEMINI_API_KEY를 설정하세요.');
+    // 약간의 지연을 추가하여 실제 API 호출처럼 보이게
+    await new Promise(resolve => setTimeout(resolve, 500));
+    return generateSampleInsight(date);
+  }
+
   const model = genAI.getGenerativeModel({ 
     model: 'gemini-2.0-flash',
     generationConfig: {

@@ -75,17 +75,19 @@ export const CalendarCell = memo(function CalendarCell({
         {date.getDate()}
       </span>
 
-      {/* Insight Indicator Dot */}
+      {/* Insight Indicator Dot - 인사이트가 있는 날짜 표시 */}
       {hasInsight && !isSelected && (
         <span 
-          className="absolute bottom-1.5 w-1 h-1 rounded-full bg-violet-500"
+          className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-violet-500 shadow-sm"
           aria-hidden="true"
+          title="인사이트 있음"
         />
       )}
       {hasInsight && isSelected && (
         <span 
-          className="absolute bottom-1.5 w-1 h-1 rounded-full bg-bg"
+          className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-white/90"
           aria-hidden="true"
+          title="인사이트 있음"
         />
       )}
     </button>

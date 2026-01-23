@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useCallback } from 'react';
-import { format } from 'date-fns';
+import { format, subDays, addDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import Link from 'next/link';
 import { Calendar } from '@/components/calendar';
@@ -42,39 +42,50 @@ export function HomeClient({
   const formattedDate = format(today, 'M월 d일 EEEE', { locale: ko });
 
   // 월 변경 시 해당 월의 인사이트 페칭
-  const handleMonthChange = useCallback(async (year: number, month: number) => {
-    setCurrentYear(prevYear => {
-      setCurrentMonth(prevMonth => {
-        // 같은 월이면 무시
-        if (prevYear === year && prevMonth === month) {
-          return prevMonth;
-        }
-        
-        // 비동기로 인사이트 페칭
-        setIsMonthLoading(true);
-        fetch(`/api/insights/month/${year}/${month}`)
-          .then(response => {
-            if (response.ok) {
-              return response.json();
-            }
-            return { insights: [] };
-          })
-          .then(data => {
-            setInsights(data.insights || []);
-          })
-          .catch(error => {
-            console.error('Failed to fetch monthly insights:', error);
-            setInsights([]);
-          })
-          .finally(() => {
-            setIsMonthLoading(false);
+  const handleMonthChange = useCallback((year: number, month: number) => {
+    // 같은 월이면 무시
+    if (currentYear === year && currentMonth === month) {
+      return;
+    }
+    
+    // 상태 업데이트
+    setCurrentYear(year);
+    setCurrentMonth(month);
+    
+    // 비동기로 인사이트 페칭
+    setIsMonthLoading(true);
+    
+    // API 요청
+    fetch(`/api/insights/month/${year}/${month}`)
+      .then(response => {
+        if (!response.ok) {
+          // 에러 응답도 JSON으로 파싱 시도
+          return response.json().then(err => {
+            throw new Error(err.error || `HTTP error! status: ${response.status}`);
+          }).catch(() => {
+            throw new Error(`HTTP error! status: ${response.status}`);
           });
-        
-        return month;
+        }
+        return response.json();
+      })
+      .then(data => {
+        // 응답 데이터 검증
+        if (data && Array.isArray(data.insights)) {
+          setInsights(data.insights);
+        } else {
+          console.warn('Invalid response format:', data);
+          setInsights([]);
+        }
+      })
+      .catch(error => {
+        console.error('Failed to fetch monthly insights:', error);
+        // 에러 발생 시에도 빈 배열로 설정하여 UI가 깨지지 않도록
+        setInsights([]);
+      })
+      .finally(() => {
+        setIsMonthLoading(false);
       });
-      return year;
-    });
-  }, []);
+  }, [currentYear, currentMonth]);
 
   // Fetch insight preview when date is selected
   const handleDateSelect = useCallback(async (date: Date) => {
@@ -180,9 +191,10 @@ export function HomeClient({
           <InsightPreview 
             insight={selectedInsight} 
             onClose={handleCloseSheet}
+            onNavigateDate={handleDateSelect}
           />
         ) : (
-          <EmptyState selectedDate={selectedDate} />
+          <EmptyState selectedDate={selectedDate} onNavigateDate={handleDateSelect} />
         )}
       </BottomSheet>
     </div>
@@ -210,7 +222,13 @@ function LoadingState() {
   );
 }
 
-function EmptyState({ selectedDate }: { selectedDate: Date | null }) {
+function EmptyState({ 
+  selectedDate, 
+  onNavigateDate 
+}: { 
+  selectedDate: Date | null;
+  onNavigateDate?: (date: Date) => void;
+}) {
   const { ts } = useTranslation();
   
   const formattedDate = selectedDate 
@@ -219,11 +237,67 @@ function EmptyState({ selectedDate }: { selectedDate: Date | null }) {
 
   const descLines = ts('preview.noInsightDesc').split('\n');
 
+  // 이전/다음 날짜 계산
+  const prevDate = selectedDate ? subDays(selectedDate, 1) : null;
+  const nextDate = selectedDate ? addDays(selectedDate, 1) : null;
+
+  const handlePrevDate = () => {
+    if (prevDate && onNavigateDate) {
+      onNavigateDate(prevDate);
+    }
+  };
+
+  const handleNextDate = () => {
+    if (nextDate && onNavigateDate) {
+      onNavigateDate(nextDate);
+    }
+  };
+
   return (
-    <div className="flex flex-col items-center justify-center py-10 text-center">
-      {/* 빈 상태 아이콘 - 그라데이션 배경 */}
-      <div className="w-16 h-16 mb-5 rounded-2xl bg-gradient-to-br from-gray-100 to-gray-200 dark:from-gray-800 dark:to-gray-700 flex items-center justify-center">
-        <EmptyIcon />
+    <div className="flex flex-col items-center justify-center py-10 text-center relative px-12">
+      {/* 이전 날짜 화살표 버튼 - 왼쪽 */}
+      {selectedDate && (
+        <button
+          type="button"
+          onClick={handlePrevDate}
+          className="
+            absolute left-0 top-1/2 -translate-y-1/2
+            w-10 h-10
+            flex items-center justify-center
+            text-secondary hover:text-label
+            active:scale-95
+            transition-all duration-quick
+            z-10
+          "
+          aria-label="이전 날짜"
+        >
+          <ChevronLeftIcon />
+        </button>
+      )}
+
+      {/* 다음 날짜 화살표 버튼 - 오른쪽 */}
+      {selectedDate && (
+        <button
+          type="button"
+          onClick={handleNextDate}
+          className="
+            absolute right-0 top-1/2 -translate-y-1/2
+            w-10 h-10
+            flex items-center justify-center
+            text-secondary hover:text-label
+            active:scale-95
+            transition-all duration-quick
+            z-10
+          "
+          aria-label="다음 날짜"
+        >
+          <ChevronRightIcon />
+        </button>
+      )}
+
+      {/* 빈 상태 아이콘 - 회색으로 아직 생성 안된 느낌 */}
+      <div className="w-14 h-14 mb-5 rounded-full bg-gradient-to-br from-gray-200 to-gray-300 dark:from-gray-700 dark:to-gray-600 flex items-center justify-center shadow-sm">
+        <EmptyInsightIcon />
       </div>
       <p className="text-body font-semibold mb-1">
         {formattedDate}의 인사이트
@@ -240,23 +314,59 @@ function EmptyState({ selectedDate }: { selectedDate: Date | null }) {
   );
 }
 
-function EmptyIcon() {
+function ChevronLeftIcon() {
   return (
-    <svg 
-      width="28" 
-      height="28" 
-      viewBox="0 0 24 24" 
-      fill="none" 
-      stroke="currentColor" 
-      strokeWidth="1.5" 
-      strokeLinecap="round" 
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
       strokeLinejoin="round"
-      className="text-secondary"
       aria-hidden="true"
     >
-      <path d="M12 2L2 7l10 5 10-5-10-5z" />
-      <path d="M2 17l10 5 10-5" />
-      <path d="M2 12l10 5 10-5" />
+      <polyline points="15 18 9 12 15 6" />
+    </svg>
+  );
+}
+
+function ChevronRightIcon() {
+  return (
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <polyline points="9 18 15 12 9 6" />
+    </svg>
+  );
+}
+
+function EmptyInsightIcon() {
+  return (
+    <svg 
+      width="18" 
+      height="18" 
+      viewBox="0 0 24 24" 
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="text-gray-500 dark:text-gray-400"
+      aria-hidden="true"
+    >
+      <path d="M9 18h6" />
+      <path d="M10 22h4" />
+      <path d="M12 2a7 7 0 0 0-4 12.7V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.3A7 7 0 0 0 12 2z" />
     </svg>
   );
 }

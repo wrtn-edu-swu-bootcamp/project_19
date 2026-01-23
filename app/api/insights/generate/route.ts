@@ -17,48 +17,65 @@ import { saveInsight, getInsightByDate } from '@/lib/db';
 
 /**
  * POST /api/insights/generate
- * Vercel Cron Job이 호출하는 엔드포인트
+ * Vercel Cron Job이 매일 호출하여 새 인사이트를 생성하는 엔드포인트
+ * 
+ * 실행 시간: 매일 UTC 21:00 (한국시간 오전 6:00)
+ * 
+ * @see https://vercel.com/docs/cron-jobs
  */
 export async function POST(request: NextRequest) {
-  // Cron 인증 검증
-  const authHeader = request.headers.get('authorization');
-  const expectedAuth = `Bearer ${process.env.CRON_SECRET}`;
+  const startTime = Date.now();
+  const isDevelopment = process.env.NODE_ENV !== 'production';
   
-  if (!process.env.CRON_SECRET) {
-    console.error('CRON_SECRET 환경 변수가 설정되지 않았습니다.');
-    return NextResponse.json(
-      { error: 'Server configuration error' },
-      { status: 500 }
-    );
-  }
-  
-  if (authHeader !== expectedAuth) {
-    console.warn('인증 실패: 잘못된 Authorization 헤더');
-    return NextResponse.json(
-      { error: 'Unauthorized' },
-      { status: 401 }
-    );
+  // 프로덕션 환경에서만 인증 검증
+  if (!isDevelopment) {
+    const authHeader = request.headers.get('authorization');
+    const expectedAuth = `Bearer ${process.env.CRON_SECRET}`;
+    
+    if (!process.env.CRON_SECRET) {
+      console.error('[CRON] CRON_SECRET 환경 변수가 설정되지 않았습니다.');
+      return NextResponse.json(
+        { error: 'Server configuration error', message: 'CRON_SECRET is not set' },
+        { status: 500 }
+      );
+    }
+    
+    if (authHeader !== expectedAuth) {
+      console.warn('[CRON] 인증 실패: 잘못된 Authorization 헤더');
+      return NextResponse.json(
+        { error: 'Unauthorized', message: 'Invalid authorization header' },
+        { status: 401 }
+      );
+    }
+    
+    console.log('[CRON] 인증 성공 - 인사이트 생성 작업 시작');
+  } else {
+    console.log('[DEV] Development mode: 인증 생략');
   }
   
   // 오늘 날짜 (KST 기준)
   const today = getKSTDateString();
+  console.log(`[CRON] 오늘 날짜 (KST): ${today}`);
   
   try {
     // 이미 오늘 인사이트가 있는지 확인
     const existingInsight = await getInsightByDate(today);
     if (existingInsight) {
-      console.log(`${today} 인사이트가 이미 존재합니다.`);
+      const duration = Date.now() - startTime;
+      console.log(`[CRON] ${today} 인사이트가 이미 존재합니다. (${duration}ms)`);
       return NextResponse.json({
         success: true,
         message: 'Insight already exists for today',
         date: today,
         skipped: true,
+        duration_ms: duration,
       });
     }
     
     // AI로 인사이트 생성
-    console.log(`${today} 인사이트 생성 시작...`);
+    console.log(`[CRON] ${today} 인사이트 생성 시작...`);
     const generatedInsight = await generateInsightWithRetry(today);
+    console.log(`[CRON] AI 인사이트 생성 완료: ${generatedInsight.insight_text.slice(0, 50)}...`);
     
     // DB에 저장
     await saveInsight({
@@ -66,23 +83,32 @@ export async function POST(request: NextRequest) {
       ...generatedInsight,
     });
     
-    console.log(`${today} 인사이트 생성 및 저장 완료`);
+    const duration = Date.now() - startTime;
+    console.log(`[CRON] ${today} 인사이트 생성 및 저장 완료 (${duration}ms)`);
     
     return NextResponse.json({
       success: true,
       message: 'Insight generated successfully',
       date: today,
       insight_preview: generatedInsight.insight_text.slice(0, 100),
+      duration_ms: duration,
     });
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-    console.error(`인사이트 생성 실패 (${today}):`, errorMessage);
+    const duration = Date.now() - startTime;
+    console.error(`[CRON] 인사이트 생성 실패 (${today}, ${duration}ms):`, errorMessage);
+    
+    // 스택 트레이스도 로깅 (개발 환경에서만)
+    if (isDevelopment && error instanceof Error) {
+      console.error('[CRON] Stack trace:', error.stack);
+    }
     
     return NextResponse.json(
       { 
         error: 'Failed to generate insight',
         message: errorMessage,
         date: today,
+        duration_ms: duration,
       },
       { status: 500 }
     );
