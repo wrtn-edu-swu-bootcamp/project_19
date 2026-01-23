@@ -184,12 +184,27 @@
   
   /* 보통 (기본값) */
   html[data-font-size="medium"] {
-    font-size: 16px;
+    font-size: 15px;
   }
   
   /* 크게 */
   html[data-font-size="large"] {
-    font-size: 18px;
+    font-size: 17px;
+  }
+  
+  /* 데스크톱 환경에서는 조금 더 큰 폰트 사용 */
+  @media (min-width: 640px) {
+    html[data-font-size="small"] {
+      font-size: 14px;
+    }
+    
+    html[data-font-size="medium"] {
+      font-size: 16px;
+    }
+    
+    html[data-font-size="large"] {
+      font-size: 18px;
+    }
   }
 }
 

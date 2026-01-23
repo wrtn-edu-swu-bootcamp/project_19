@@ -53,7 +53,7 @@ export const CalendarCell = memo(function CalendarCell({
       aria-selected={isSelected}
       className={`
         relative flex flex-col items-center justify-center
-        w-11 h-11 touch-target
+        aspect-square w-full max-w-[44px] mx-auto
         rounded-full
         transition-all duration-quick ease-smooth
         ${!isCurrentMonth 
@@ -71,21 +71,21 @@ export const CalendarCell = memo(function CalendarCell({
       `}
     >
       {/* Date Number */}
-      <span className={`text-body font-medium ${getDateColor()}`}>
+      <span className={`text-callout sm:text-body font-medium ${getDateColor()}`}>
         {date.getDate()}
       </span>
 
       {/* Insight Indicator Dot - 인사이트가 있는 날짜 표시 */}
       {hasInsight && !isSelected && (
         <span 
-          className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-violet-500 shadow-sm"
+          className="absolute bottom-0.5 sm:bottom-1 w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-violet-500 shadow-sm"
           aria-hidden="true"
           title="인사이트 있음"
         />
       )}
       {hasInsight && isSelected && (
         <span 
-          className="absolute bottom-1 w-1.5 h-1.5 rounded-full bg-white/90"
+          className="absolute bottom-0.5 sm:bottom-1 w-1 h-1 sm:w-1.5 sm:h-1.5 rounded-full bg-white/90"
           aria-hidden="true"
           title="인사이트 있음"
         />

@@ -147,26 +147,26 @@ export function Calendar({
   };
 
   return (
-    <div className="w-full max-w-[343px] mx-auto">
+    <div className="w-full max-w-[400px] sm:max-w-[343px] mx-auto px-2 sm:px-0">
       {/* Month Navigation */}
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex items-center justify-between mb-4 sm:mb-6">
         <button
           type="button"
           onClick={goToPreviousMonth}
-          className="touch-target flex items-center justify-center w-11 h-11 rounded-full hover:bg-bg-secondary active:scale-95 transition-all"
+          className="touch-target flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full hover:bg-bg-secondary active:scale-95 transition-all flex-shrink-0"
           aria-label="이전 달"
         >
           <ChevronLeftIcon />
         </button>
 
-        <h2 className="text-title-2 font-semibold">
+        <h2 className="text-title-3 sm:text-title-2 font-semibold whitespace-nowrap">
           {format(currentMonth, 'yyyy년 M월', { locale: ko })}
         </h2>
 
         <button
           type="button"
           onClick={goToNextMonth}
-          className="touch-target flex items-center justify-center w-11 h-11 rounded-full hover:bg-bg-secondary active:scale-95 transition-all"
+          className="touch-target flex items-center justify-center w-10 h-10 sm:w-11 sm:h-11 rounded-full hover:bg-bg-secondary active:scale-95 transition-all flex-shrink-0"
           aria-label="다음 달"
         >
           <ChevronRightIcon />
@@ -174,12 +174,12 @@ export function Calendar({
       </div>
 
       {/* Weekday Headers */}
-      <div className="grid grid-cols-7 gap-0 mb-2">
+      <div className="grid grid-cols-7 gap-1 mb-2">
         {weekdays.map((day, index) => (
           <div
             key={day}
             className={`
-              flex items-center justify-center h-8 text-footnote font-medium
+              flex items-center justify-center h-7 sm:h-8 text-caption sm:text-footnote font-medium
               ${index === 0 ? 'text-error' : index === 6 ? 'text-link' : 'text-secondary'}
             `}
           >
@@ -189,7 +189,7 @@ export function Calendar({
       </div>
 
       {/* Calendar Grid - 최소 높이 고정으로 레이아웃 일관성 유지 */}
-      <div className="relative min-h-[264px]">
+      <div className="relative min-h-[240px] sm:min-h-[264px]">
         <AnimatePresence mode="wait" custom={direction}>
           <motion.div
             key={currentMonth.toISOString()}
@@ -199,7 +199,7 @@ export function Calendar({
             animate="center"
             exit="exit"
             transition={{ duration: 0.2, ease: 'easeInOut' }}
-            className={`grid grid-cols-7 gap-0 ${isLoading ? 'opacity-50' : ''}`}
+            className={`grid grid-cols-7 gap-1 ${isLoading ? 'opacity-50' : ''}`}
           >
             {calendarDays.map((day) => (
               <CalendarCell

@@ -42,7 +42,7 @@ export function HomeClient({
   const formattedDate = format(today, 'M월 d일 EEEE', { locale: ko });
 
   // 월 변경 시 해당 월의 인사이트 페칭
-  const handleMonthChange = useCallback((year: number, month: number) => {
+  const handleMonthChange = useCallback(async (year: number, month: number) => {
     // 같은 월이면 무시
     if (currentYear === year && currentMonth === month) {
       return;
@@ -55,36 +55,38 @@ export function HomeClient({
     // 비동기로 인사이트 페칭
     setIsMonthLoading(true);
     
-    // API 요청
-    fetch(`/api/insights/month/${year}/${month}`)
-      .then(response => {
-        if (!response.ok) {
-          // 에러 응답도 JSON으로 파싱 시도
-          return response.json().then(err => {
-            throw new Error(err.error || `HTTP error! status: ${response.status}`);
-          }).catch(() => {
-            throw new Error(`HTTP error! status: ${response.status}`);
-          });
+    try {
+      // API 요청
+      const response = await fetch(`/api/insights/month/${year}/${month}`);
+      
+      if (!response.ok) {
+        // 에러 응답 처리
+        let errorMessage = `HTTP error! status: ${response.status}`;
+        try {
+          const errorData = await response.json();
+          errorMessage = errorData.error || errorMessage;
+        } catch {
+          // JSON 파싱 실패 시 기본 에러 메시지 사용
         }
-        return response.json();
-      })
-      .then(data => {
-        // 응답 데이터 검증
-        if (data && Array.isArray(data.insights)) {
-          setInsights(data.insights);
-        } else {
-          console.warn('Invalid response format:', data);
-          setInsights([]);
-        }
-      })
-      .catch(error => {
-        console.error('Failed to fetch monthly insights:', error);
-        // 에러 발생 시에도 빈 배열로 설정하여 UI가 깨지지 않도록
+        throw new Error(errorMessage);
+      }
+      
+      const data = await response.json();
+      
+      // 응답 데이터 검증
+      if (data && Array.isArray(data.insights)) {
+        setInsights(data.insights);
+      } else {
+        console.warn('Invalid response format:', data);
         setInsights([]);
-      })
-      .finally(() => {
-        setIsMonthLoading(false);
-      });
+      }
+    } catch (error) {
+      console.error('Failed to fetch monthly insights:', error);
+      // 에러 발생 시에도 빈 배열로 설정하여 UI가 깨지지 않도록
+      setInsights([]);
+    } finally {
+      setIsMonthLoading(false);
+    }
   }, [currentYear, currentMonth]);
 
   // Fetch insight preview when date is selected
@@ -118,42 +120,42 @@ export function HomeClient({
   }, []);
 
   return (
-    <div className="flex flex-1 flex-col px-5 pt-8 pb-4 min-h-screen">
+    <div className="flex flex-1 flex-col px-4 sm:px-5 pt-6 sm:pt-8 pb-4 min-h-screen">
       {/* Header - 미니멀 애플 스타일 */}
-      <header className="w-full max-w-[600px] mx-auto mb-8 flex-shrink-0">
-        <div className="flex items-center justify-between">
+      <header className="w-full max-w-[600px] mx-auto mb-6 sm:mb-8 flex-shrink-0">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           {/* 로고 & 타이틀 */}
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-sm">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 flex-shrink-0 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-sm">
               <InsightIcon />
             </div>
-            <div>
-              <h1 className="text-headline font-semibold tracking-tight">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-headline font-semibold tracking-tight truncate">
                 {ts('home.title')}
               </h1>
-              <p className="text-caption text-secondary -mt-0.5">
+              <p className="text-caption text-secondary -mt-0.5 truncate">
                 {ts('home.subtitle')}
               </p>
             </div>
           </div>
 
           {/* 오늘 날짜 뱃지 + 북마크 + 설정 버튼 */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <div className="px-3 py-1.5 rounded-full bg-bg-secondary">
-              <p className="text-footnote font-medium text-secondary">
+              <p className="text-footnote font-medium text-secondary whitespace-nowrap">
                 {formattedDate}
               </p>
             </div>
             <Link 
               href="/bookmarks"
-              className="w-9 h-9 rounded-full bg-bg-secondary flex items-center justify-center hover:bg-separator/30 active:scale-95 transition-all"
+              className="w-9 h-9 flex-shrink-0 rounded-full bg-bg-secondary flex items-center justify-center hover:bg-separator/30 active:scale-95 transition-all"
               aria-label="북마크"
             >
               <BookmarkIcon />
             </Link>
             <Link 
               href="/settings"
-              className="w-9 h-9 rounded-full bg-bg-secondary flex items-center justify-center hover:bg-separator/30 active:scale-95 transition-all"
+              className="w-9 h-9 flex-shrink-0 rounded-full bg-bg-secondary flex items-center justify-center hover:bg-separator/30 active:scale-95 transition-all"
               aria-label="설정"
             >
               <SettingsIcon />
@@ -177,8 +179,8 @@ export function HomeClient({
       </main>
 
       {/* Footer - 미니멀 힌트 - 페이지 하단 고정 */}
-      <footer className="w-full max-w-[600px] mx-auto mb-6 text-center flex-shrink-0">
-        <p className="text-caption text-label-tertiary">
+      <footer className="w-full max-w-[600px] mx-auto mb-4 sm:mb-6 text-center flex-shrink-0">
+        <p className="text-caption text-label-tertiary leading-relaxed">
           {ts('home.footer')}
         </p>
       </footer>
