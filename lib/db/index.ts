@@ -5,9 +5,33 @@
  * 로컬 개발 환경에서 DB 연결이 없을 경우 샘플 데이터를 사용합니다.
  */
 
-import { sql } from '@vercel/postgres';
 import type { Insight, InsightInsert, InsightCalendarItem } from '@/types/insight';
 import type { Note, NoteInsert } from '@/types/note';
+
+// DB 연결이 있을 때만 sql 객체 import (초기화 오류 방지)
+let sql: any = null;
+
+// Lazy import를 위한 함수
+function getSql() {
+  if (sql !== null) {
+    return sql;
+  }
+  
+  if (!hasDbConnection()) {
+    return null;
+  }
+  
+  try {
+    // 동적 import로 오류 방지
+    const postgres = require('@vercel/postgres');
+    sql = postgres.sql;
+    return sql;
+  } catch (error) {
+    console.warn('[DB] @vercel/postgres 초기화 실패, Mock 모드로 작동합니다:', error);
+    sql = false; // 재시도 방지
+    return null;
+  }
+}
 
 // =============================================
 // Mock Data for Development (DB 연결 없을 때 사용)
@@ -159,7 +183,12 @@ export async function getInsightByDate(date: string): Promise<Insight | null> {
     return insight || null;
   }
 
-  const { rows } = await sql<Insight>`
+  const dbSql = getSql();
+  if (!dbSql) {
+    throw new Error('Database connection not available');
+  }
+  
+  const { rows } = await dbSql<Insight>`
     SELECT id, date, insight_text, keywords, context, question, created_at
     FROM insights
     WHERE date = ${date}
@@ -191,9 +220,14 @@ export async function saveInsight(insight: InsightInsert): Promise<void> {
     return;
   }
 
+  const dbSql = getSql();
+  if (!dbSql) {
+    throw new Error('Database connection not available');
+  }
+  
   const keywordsJson = JSON.stringify(insight.keywords);
   
-  await sql`
+  await dbSql`
     INSERT INTO insights (date, insight_text, keywords, context, question)
     VALUES (${insight.date}, ${insight.insight_text}, ${keywordsJson}::jsonb, ${insight.context}, ${insight.question})
     ON CONFLICT (date) DO UPDATE SET
@@ -226,6 +260,10 @@ export async function getInsightsByMonth(
       }));
   }
 
+  if (!sql) {
+    throw new Error('Database connection not available');
+  }
+  
   const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
   const endDate = `${year}-${String(month).padStart(2, '0')}-31`;
   
@@ -253,7 +291,12 @@ export async function getRecentInsights(limit: number = 7): Promise<Insight[]> {
     return getMockInsights().slice(0, limit);
   }
 
-  const { rows } = await sql<Insight>`
+  const dbSql = getSql();
+  if (!dbSql) {
+    throw new Error('Database connection not available');
+  }
+  
+  const { rows } = await dbSql<Insight>`
     SELECT id, date, insight_text, keywords, context, question, created_at
     FROM insights
     ORDER BY date DESC
@@ -294,6 +337,10 @@ export async function getNoteByDate(
     return mockNotes.get(key) || null;
   }
 
+  if (!sql) {
+    throw new Error('Database connection not available');
+  }
+  
   const { rows } = await sql<Note>`
     SELECT id, insight_date, user_id, content, created_at, updated_at
     FROM notes
@@ -337,6 +384,10 @@ export async function saveNote(note: NoteInsert): Promise<Note> {
     return savedNote;
   }
 
+  if (!sql) {
+    throw new Error('Database connection not available');
+  }
+  
   const { rows } = await sql<Note>`
     INSERT INTO notes (insight_date, user_id, content, updated_at)
     VALUES (${note.insight_date}, ${note.user_id}, ${note.content}, NOW())
@@ -373,6 +424,10 @@ export async function getNotesByUser(userId: string): Promise<Note[]> {
       .sort((a, b) => b.insight_date.localeCompare(a.insight_date));
   }
 
+  if (!sql) {
+    throw new Error('Database connection not available');
+  }
+  
   const { rows } = await sql<Note>`
     SELECT id, insight_date, user_id, content, created_at, updated_at
     FROM notes
@@ -406,7 +461,12 @@ export async function deleteNote(id: number): Promise<void> {
     return;
   }
 
-  await sql`DELETE FROM notes WHERE id = ${id}`;
+  const dbSql = getSql();
+  if (!dbSql) {
+    throw new Error('Database connection not available');
+  }
+  
+  await dbSql`DELETE FROM notes WHERE id = ${id}`;
 }
 
 // =============================================
@@ -435,8 +495,13 @@ export async function testConnection(): Promise<boolean> {
     return true;
   }
 
+  const dbSql = getSql();
+  if (!dbSql) {
+    return false;
+  }
+  
   try {
-    await sql`SELECT 1`;
+    await dbSql`SELECT 1`;
     return true;
   } catch (error) {
     console.error('Database connection failed:', error);
