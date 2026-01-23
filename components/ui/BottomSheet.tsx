@@ -86,7 +86,7 @@ export function BottomSheet({ isOpen, onClose, children }: BottomSheetProps) {
             </div>
 
             {/* Content */}
-            <div className="px-0 pb-6 overflow-y-auto max-h-[calc(85vh-44px)] safe-area-inset-bottom">
+            <div className="px-0 pb-3 overflow-y-auto max-h-[calc(85vh-44px)] safe-area-inset-bottom">
               {children}
             </div>
           </motion.div>

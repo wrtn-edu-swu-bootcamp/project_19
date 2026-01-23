@@ -5,9 +5,15 @@ import { subDays, addDays, format } from 'date-fns';
 
 type InsightNavigationArrowsProps = {
   currentDate: string;
+  hasPrevInsight?: boolean;
+  hasNextInsight?: boolean;
 };
 
-export function InsightNavigationArrows({ currentDate }: InsightNavigationArrowsProps) {
+export function InsightNavigationArrows({ 
+  currentDate, 
+  hasPrevInsight = true, 
+  hasNextInsight = true 
+}: InsightNavigationArrowsProps) {
   const router = useRouter();
   
   const currentDateObj = new Date(currentDate);
@@ -27,63 +33,67 @@ export function InsightNavigationArrows({ currentDate }: InsightNavigationArrows
 
   return (
     <>
-      {/* 이전 날짜 화살표 버튼 - 왼쪽 끝 (여백 살짝) */}
-      <button
-        type="button"
-        id="insight-nav-arrow-prev"
-        onClick={handlePrevDate}
-        style={{ 
-          position: 'fixed',
-          left: '1px',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          zIndex: 50,
-          width: '2.5rem',
-          height: '2.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: 0,
-          padding: 0
-        }}
-        className="
-          text-secondary hover:text-label
-          active:scale-95
-          transition-all duration-quick
-        "
-        aria-label="이전 날짜"
-      >
-        <ChevronLeftIcon />
-      </button>
+      {/* 이전 날짜 화살표 버튼 - 인사이트가 있을 때만 표시 */}
+      {hasPrevInsight && (
+        <button
+          type="button"
+          id="insight-nav-arrow-prev"
+          onClick={handlePrevDate}
+          style={{ 
+            position: 'fixed',
+            left: '1px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 50,
+            width: '2.5rem',
+            height: '2.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: 0,
+            padding: 0
+          }}
+          className="
+            text-secondary hover:text-label
+            active:scale-95
+            transition-all duration-quick
+          "
+          aria-label="이전 날짜"
+        >
+          <ChevronLeftIcon />
+        </button>
+      )}
 
-      {/* 다음 날짜 화살표 버튼 - 오른쪽 끝 (여백 살짝) */}
-      <button
-        type="button"
-        id="insight-nav-arrow-next"
-        onClick={handleNextDate}
-        style={{ 
-          position: 'fixed',
-          right: '1px',
-          top: '50%',
-          transform: 'translateY(-50%)',
-          zIndex: 50,
-          width: '2.5rem',
-          height: '2.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          margin: 0,
-          padding: 0
-        }}
-        className="
-          text-secondary hover:text-label
-          active:scale-95
-          transition-all duration-quick
-        "
-        aria-label="다음 날짜"
-      >
-        <ChevronRightIcon />
-      </button>
+      {/* 다음 날짜 화살표 버튼 - 인사이트가 있을 때만 표시 */}
+      {hasNextInsight && (
+        <button
+          type="button"
+          id="insight-nav-arrow-next"
+          onClick={handleNextDate}
+          style={{ 
+            position: 'fixed',
+            right: '1px',
+            top: '50%',
+            transform: 'translateY(-50%)',
+            zIndex: 50,
+            width: '2.5rem',
+            height: '2.5rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            margin: 0,
+            padding: 0
+          }}
+          className="
+            text-secondary hover:text-label
+            active:scale-95
+            transition-all duration-quick
+          "
+          aria-label="다음 날짜"
+        >
+          <ChevronRightIcon />
+        </button>
+      )}
     </>
   );
 }

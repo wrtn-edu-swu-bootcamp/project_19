@@ -85,6 +85,30 @@ export default async function InsightPage({ params }: PageProps) {
     );
   }
 
+  // Check if prev/next dates have insights
+  const currentDateObj = new Date(date);
+  const prevDate = subDays(currentDateObj, 1);
+  const nextDate = addDays(currentDateObj, 1);
+  const prevDateStr = format(prevDate, 'yyyy-MM-dd');
+  const nextDateStr = format(nextDate, 'yyyy-MM-dd');
+
+  let hasPrevInsight = false;
+  let hasNextInsight = false;
+
+  try {
+    const prevInsight = await getInsightByDate(prevDateStr);
+    hasPrevInsight = !!prevInsight;
+  } catch {
+    hasPrevInsight = false;
+  }
+
+  try {
+    const nextInsight = await getInsightByDate(nextDateStr);
+    hasNextInsight = !!nextInsight;
+  } catch {
+    hasNextInsight = false;
+  }
+
   return (
     <div className="min-h-screen flex flex-col bg-bg-secondary relative">
       <InsightHeader date={date} insightText={insight.insight_text} />
@@ -100,7 +124,11 @@ export default async function InsightPage({ params }: PageProps) {
       </main>
 
       {/* Navigation Arrows */}
-      <InsightNavigationArrows currentDate={date} />
+      <InsightNavigationArrows 
+        currentDate={date} 
+        hasPrevInsight={hasPrevInsight}
+        hasNextInsight={hasNextInsight}
+      />
     </div>
   );
 }
