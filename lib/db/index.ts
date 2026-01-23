@@ -260,21 +260,22 @@ export async function getInsightsByMonth(
       }));
   }
 
-  if (!sql) {
+  const dbSql = getSql();
+  if (!dbSql) {
     throw new Error('Database connection not available');
   }
   
   const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
   const endDate = `${year}-${String(month).padStart(2, '0')}-31`;
   
-  const { rows } = await sql<Pick<Insight, 'date' | 'insight_text'>>`
+  const { rows } = await dbSql<Pick<Insight, 'date' | 'insight_text'>>`
     SELECT date, insight_text
     FROM insights
     WHERE date >= ${startDate} AND date <= ${endDate}
     ORDER BY date ASC
   `;
   
-  return rows.map(row => ({
+  return rows.map((row: Pick<Insight, 'date' | 'insight_text'>) => ({
     date: formatDate(row.date),
     insight_text: row.insight_text,
     hasInsight: true,
@@ -303,7 +304,7 @@ export async function getRecentInsights(limit: number = 7): Promise<Insight[]> {
     LIMIT ${limit}
   `;
   
-  return rows.map(row => ({
+  return rows.map((row: Insight) => ({
     id: row.id,
     date: formatDate(row.date),
     insight_text: row.insight_text,
@@ -337,11 +338,12 @@ export async function getNoteByDate(
     return mockNotes.get(key) || null;
   }
 
-  if (!sql) {
+  const dbSql = getSql();
+  if (!dbSql) {
     throw new Error('Database connection not available');
   }
   
-  const { rows } = await sql<Note>`
+  const { rows } = await dbSql<Note>`
     SELECT id, insight_date, user_id, content, created_at, updated_at
     FROM notes
     WHERE insight_date = ${date} AND user_id = ${userId}
@@ -384,11 +386,12 @@ export async function saveNote(note: NoteInsert): Promise<Note> {
     return savedNote;
   }
 
-  if (!sql) {
+  const dbSql = getSql();
+  if (!dbSql) {
     throw new Error('Database connection not available');
   }
   
-  const { rows } = await sql<Note>`
+  const { rows } = await dbSql<Note>`
     INSERT INTO notes (insight_date, user_id, content, updated_at)
     VALUES (${note.insight_date}, ${note.user_id}, ${note.content}, NOW())
     ON CONFLICT (insight_date, user_id) DO UPDATE SET
@@ -424,18 +427,19 @@ export async function getNotesByUser(userId: string): Promise<Note[]> {
       .sort((a, b) => b.insight_date.localeCompare(a.insight_date));
   }
 
-  if (!sql) {
+  const dbSql = getSql();
+  if (!dbSql) {
     throw new Error('Database connection not available');
   }
   
-  const { rows } = await sql<Note>`
+  const { rows } = await dbSql<Note>`
     SELECT id, insight_date, user_id, content, created_at, updated_at
     FROM notes
     WHERE user_id = ${userId}
     ORDER BY insight_date DESC
   `;
   
-  return rows.map(row => ({
+  return rows.map((row: Note) => ({
     id: row.id,
     insight_date: formatDate(row.insight_date),
     user_id: row.user_id,
