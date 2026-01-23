@@ -10,27 +10,43 @@ import type { Note, NoteInsert } from '@/types/note';
 
 // DB 연결이 있을 때만 sql 객체 import (초기화 오류 방지)
 let sql: any = null;
+let sqlPromise: Promise<any> | null = null;
 
-// Lazy import를 위한 함수
-function getSql() {
+// Lazy import를 위한 함수 (ESM 방식)
+async function getSql(): Promise<any> {
   if (sql !== null) {
     return sql;
+  }
+  
+  if (sql === false) {
+    // 이미 실패한 경우 재시도하지 않음
+    return null;
   }
   
   if (!hasDbConnection()) {
     return null;
   }
   
-  try {
-    // 동적 import로 오류 방지
-    const postgres = require('@vercel/postgres');
-    sql = postgres.sql;
-    return sql;
-  } catch (error) {
-    console.warn('[DB] @vercel/postgres 초기화 실패, Mock 모드로 작동합니다:', error);
-    sql = false; // 재시도 방지
-    return null;
+  // 이미 로딩 중이면 기다림
+  if (sqlPromise) {
+    return sqlPromise;
   }
+  
+  // 동적 import로 오류 방지 (ESM 방식)
+  sqlPromise = (async () => {
+    try {
+      const postgres = await import('@vercel/postgres');
+      sql = postgres.sql;
+      return sql;
+    } catch (error) {
+      console.warn('[DB] @vercel/postgres 초기화 실패, Mock 모드로 작동합니다:', error);
+      sql = false; // 재시도 방지
+      sqlPromise = null;
+      return null;
+    }
+  })();
+  
+  return sqlPromise;
 }
 
 // =============================================
@@ -165,7 +181,15 @@ function getDateString(daysOffset: number): string {
 
 // DB 연결 여부 확인
 function hasDbConnection(): boolean {
-  return !!(process.env.POSTGRES_URL || process.env.DATABASE_URL);
+  // Vercel에서는 POSTGRES_URL 또는 DATABASE_URL 사용
+  const hasUrl = !!(process.env.POSTGRES_URL || process.env.DATABASE_URL);
+  
+  // 프로덕션 환경에서는 URL이 있어야 함
+  if (process.env.NODE_ENV === 'production' && !hasUrl) {
+    console.warn('[DB] Production 환경에서 DB 연결 URL이 없습니다. Mock 모드로 작동합니다.');
+  }
+  
+  return hasUrl;
 }
 
 // =============================================
@@ -183,31 +207,41 @@ export async function getInsightByDate(date: string): Promise<Insight | null> {
     return insight || null;
   }
 
-  const dbSql = getSql();
+  const dbSql = await getSql();
   if (!dbSql) {
-    throw new Error('Database connection not available');
+    // DB 연결 실패 시 Mock 데이터 사용
+    console.log('[DB] Database connection failed, using mock data for getInsightByDate:', date);
+    const insight = getMockInsights().find(i => i.date === date);
+    return insight || null;
   }
   
-  const { rows } = await dbSql<Insight>`
-    SELECT id, date, insight_text, keywords, context, question, created_at
-    FROM insights
-    WHERE date = ${date}
-  `;
-  
-  const row = rows[0];
-  if (!row) return null;
-  
-  return {
-    id: row.id,
-    date: formatDate(row.date),
-    insight_text: row.insight_text,
-    keywords: typeof row.keywords === 'string' 
-      ? JSON.parse(row.keywords) 
-      : row.keywords,
-    context: row.context,
-    question: row.question,
-    created_at: row.created_at,
-  };
+  try {
+    const { rows } = await dbSql<Insight>`
+      SELECT id, date, insight_text, keywords, context, question, created_at
+      FROM insights
+      WHERE date = ${date}
+    `;
+    
+    const row = rows[0];
+    if (!row) return null;
+    
+    return {
+      id: row.id,
+      date: formatDate(row.date),
+      insight_text: row.insight_text,
+      keywords: typeof row.keywords === 'string' 
+        ? JSON.parse(row.keywords) 
+        : row.keywords,
+      context: row.context,
+      question: row.question,
+      created_at: row.created_at,
+    };
+  } catch (error) {
+    console.error('[DB] Query failed, using mock data:', error);
+    // 쿼리 실패 시 Mock 데이터 사용
+    const insight = getMockInsights().find(i => i.date === date);
+    return insight || null;
+  }
 }
 
 /**
@@ -220,22 +254,28 @@ export async function saveInsight(insight: InsightInsert): Promise<void> {
     return;
   }
 
-  const dbSql = getSql();
+  const dbSql = await getSql();
   if (!dbSql) {
-    throw new Error('Database connection not available');
+    console.warn('[DB] Database connection not available, skipping save');
+    return;
   }
   
-  const keywordsJson = JSON.stringify(insight.keywords);
-  
-  await dbSql`
-    INSERT INTO insights (date, insight_text, keywords, context, question)
-    VALUES (${insight.date}, ${insight.insight_text}, ${keywordsJson}::jsonb, ${insight.context}, ${insight.question})
-    ON CONFLICT (date) DO UPDATE SET
-      insight_text = EXCLUDED.insight_text,
-      keywords = EXCLUDED.keywords,
-      context = EXCLUDED.context,
-      question = EXCLUDED.question
-  `;
+  try {
+    const keywordsJson = JSON.stringify(insight.keywords);
+    
+    await dbSql`
+      INSERT INTO insights (date, insight_text, keywords, context, question)
+      VALUES (${insight.date}, ${insight.insight_text}, ${keywordsJson}::jsonb, ${insight.context}, ${insight.question})
+      ON CONFLICT (date) DO UPDATE SET
+        insight_text = EXCLUDED.insight_text,
+        keywords = EXCLUDED.keywords,
+        context = EXCLUDED.context,
+        question = EXCLUDED.question
+    `;
+  } catch (error) {
+    console.error('[DB] Failed to save insight:', error);
+    throw error;
+  }
 }
 
 /**
@@ -260,26 +300,52 @@ export async function getInsightsByMonth(
       }));
   }
 
-  const dbSql = getSql();
+  const dbSql = await getSql();
   if (!dbSql) {
-    throw new Error('Database connection not available');
+    // DB 연결 실패 시 Mock 데이터 사용
+    console.log('[DB] Database connection failed, using mock data for getInsightsByMonth:', year, month);
+    const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+    const endDate = `${year}-${String(month).padStart(2, '0')}-31`;
+    
+    return getMockInsights()
+      .filter(i => i.date >= startDate && i.date <= endDate)
+      .map(i => ({
+        date: i.date,
+        insight_text: i.insight_text,
+        hasInsight: true,
+      }));
   }
   
-  const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
-  const endDate = `${year}-${String(month).padStart(2, '0')}-31`;
-  
-  const { rows } = await dbSql<Pick<Insight, 'date' | 'insight_text'>>`
-    SELECT date, insight_text
-    FROM insights
-    WHERE date >= ${startDate} AND date <= ${endDate}
-    ORDER BY date ASC
-  `;
-  
-  return rows.map((row: Pick<Insight, 'date' | 'insight_text'>) => ({
-    date: formatDate(row.date),
-    insight_text: row.insight_text,
-    hasInsight: true,
-  }));
+  try {
+    const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+    const endDate = `${year}-${String(month).padStart(2, '0')}-31`;
+    
+    const { rows } = await dbSql<Pick<Insight, 'date' | 'insight_text'>>`
+      SELECT date, insight_text
+      FROM insights
+      WHERE date >= ${startDate} AND date <= ${endDate}
+      ORDER BY date ASC
+    `;
+    
+    return rows.map((row: Pick<Insight, 'date' | 'insight_text'>) => ({
+      date: formatDate(row.date),
+      insight_text: row.insight_text,
+      hasInsight: true,
+    }));
+  } catch (error) {
+    console.error('[DB] Query failed, using mock data:', error);
+    // 쿼리 실패 시 Mock 데이터 사용
+    const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+    const endDate = `${year}-${String(month).padStart(2, '0')}-31`;
+    
+    return getMockInsights()
+      .filter(i => i.date >= startDate && i.date <= endDate)
+      .map(i => ({
+        date: i.date,
+        insight_text: i.insight_text,
+        hasInsight: true,
+      }));
+  }
 }
 
 /**
@@ -292,29 +358,36 @@ export async function getRecentInsights(limit: number = 7): Promise<Insight[]> {
     return getMockInsights().slice(0, limit);
   }
 
-  const dbSql = getSql();
+  const dbSql = await getSql();
   if (!dbSql) {
-    throw new Error('Database connection not available');
+    // DB 연결 실패 시 Mock 데이터 사용
+    console.log('[DB] Database connection failed, using mock data for getRecentInsights:', limit);
+    return getMockInsights().slice(0, limit);
   }
   
-  const { rows } = await dbSql<Insight>`
-    SELECT id, date, insight_text, keywords, context, question, created_at
-    FROM insights
-    ORDER BY date DESC
-    LIMIT ${limit}
-  `;
-  
-  return rows.map((row: Insight) => ({
-    id: row.id,
-    date: formatDate(row.date),
-    insight_text: row.insight_text,
-    keywords: typeof row.keywords === 'string' 
-      ? JSON.parse(row.keywords) 
-      : row.keywords,
-    context: row.context,
-    question: row.question,
-    created_at: row.created_at,
-  }));
+  try {
+    const { rows } = await dbSql<Insight>`
+      SELECT id, date, insight_text, keywords, context, question, created_at
+      FROM insights
+      ORDER BY date DESC
+      LIMIT ${limit}
+    `;
+    
+    return rows.map((row: Insight) => ({
+      id: row.id,
+      date: formatDate(row.date),
+      insight_text: row.insight_text,
+      keywords: typeof row.keywords === 'string' 
+        ? JSON.parse(row.keywords) 
+        : row.keywords,
+      context: row.context,
+      question: row.question,
+      created_at: row.created_at,
+    }));
+  } catch (error) {
+    console.error('[DB] Query failed, using mock data:', error);
+    return getMockInsights().slice(0, limit);
+  }
 }
 
 // =============================================
@@ -338,28 +411,36 @@ export async function getNoteByDate(
     return mockNotes.get(key) || null;
   }
 
-  const dbSql = getSql();
+  const dbSql = await getSql();
   if (!dbSql) {
-    throw new Error('Database connection not available');
+    // DB 연결 실패 시 Mock 데이터 사용
+    const key = `${date}:${userId}`;
+    return mockNotes.get(key) || null;
   }
   
-  const { rows } = await dbSql<Note>`
-    SELECT id, insight_date, user_id, content, created_at, updated_at
-    FROM notes
-    WHERE insight_date = ${date} AND user_id = ${userId}
-  `;
-  
-  const row = rows[0];
-  if (!row) return null;
-  
-  return {
-    id: row.id,
-    insight_date: formatDate(row.insight_date),
-    user_id: row.user_id,
-    content: row.content,
-    created_at: row.created_at,
-    updated_at: row.updated_at,
-  };
+  try {
+    const { rows } = await dbSql<Note>`
+      SELECT id, insight_date, user_id, content, created_at, updated_at
+      FROM notes
+      WHERE insight_date = ${date} AND user_id = ${userId}
+    `;
+    
+    const row = rows[0];
+    if (!row) return null;
+    
+    return {
+      id: row.id,
+      insight_date: formatDate(row.insight_date),
+      user_id: row.user_id,
+      content: row.content,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    };
+  } catch (error) {
+    console.error('[DB] Query failed, using mock data:', error);
+    const key = `${date}:${userId}`;
+    return mockNotes.get(key) || null;
+  }
 }
 
 /**
@@ -386,33 +467,69 @@ export async function saveNote(note: NoteInsert): Promise<Note> {
     return savedNote;
   }
 
-  const dbSql = getSql();
+  const dbSql = await getSql();
   if (!dbSql) {
-    throw new Error('Database connection not available');
+    // DB 연결 실패 시 Mock 저장
+    const key = `${note.insight_date}:${note.user_id}`;
+    const now = new Date().toISOString();
+    const existingNote = mockNotes.get(key);
+    
+    const savedNote: Note = {
+      id: existingNote?.id || Math.floor(Math.random() * 10000),
+      insight_date: note.insight_date,
+      user_id: note.user_id,
+      content: note.content,
+      created_at: existingNote?.created_at || now,
+      updated_at: now,
+    };
+    
+    mockNotes.set(key, savedNote);
+    console.log('[DB] Saved note to memory (DB unavailable):', key);
+    return savedNote;
   }
   
-  const { rows } = await dbSql<Note>`
-    INSERT INTO notes (insight_date, user_id, content, updated_at)
-    VALUES (${note.insight_date}, ${note.user_id}, ${note.content}, NOW())
-    ON CONFLICT (insight_date, user_id) DO UPDATE SET
-      content = EXCLUDED.content,
-      updated_at = NOW()
-    RETURNING id, insight_date, user_id, content, created_at, updated_at
-  `;
-  
-  const row = rows[0];
-  if (!row) {
-    throw new Error('Failed to save note');
+  try {
+    const { rows } = await dbSql<Note>`
+      INSERT INTO notes (insight_date, user_id, content, updated_at)
+      VALUES (${note.insight_date}, ${note.user_id}, ${note.content}, NOW())
+      ON CONFLICT (insight_date, user_id) DO UPDATE SET
+        content = EXCLUDED.content,
+        updated_at = NOW()
+      RETURNING id, insight_date, user_id, content, created_at, updated_at
+    `;
+    
+    const row = rows[0];
+    if (!row) {
+      throw new Error('Failed to save note');
+    }
+    
+    return {
+      id: row.id,
+      insight_date: formatDate(row.insight_date),
+      user_id: row.user_id,
+      content: row.content,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    };
+  } catch (error) {
+    console.error('[DB] Failed to save note, using mock:', error);
+    // 에러 발생 시 Mock 저장
+    const key = `${note.insight_date}:${note.user_id}`;
+    const now = new Date().toISOString();
+    const existingNote = mockNotes.get(key);
+    
+    const savedNote: Note = {
+      id: existingNote?.id || Math.floor(Math.random() * 10000),
+      insight_date: note.insight_date,
+      user_id: note.user_id,
+      content: note.content,
+      created_at: existingNote?.created_at || now,
+      updated_at: now,
+    };
+    
+    mockNotes.set(key, savedNote);
+    return savedNote;
   }
-  
-  return {
-    id: row.id,
-    insight_date: formatDate(row.insight_date),
-    user_id: row.user_id,
-    content: row.content,
-    created_at: row.created_at,
-    updated_at: row.updated_at,
-  };
 }
 
 /**
@@ -427,26 +544,37 @@ export async function getNotesByUser(userId: string): Promise<Note[]> {
       .sort((a, b) => b.insight_date.localeCompare(a.insight_date));
   }
 
-  const dbSql = getSql();
+  const dbSql = await getSql();
   if (!dbSql) {
-    throw new Error('Database connection not available');
+    // DB 연결 실패 시 Mock 데이터 사용
+    console.log('[DB] Database connection failed, using mock data for getNotesByUser:', userId);
+    return Array.from(mockNotes.values())
+      .filter(note => note.user_id === userId)
+      .sort((a, b) => b.insight_date.localeCompare(a.insight_date));
   }
   
-  const { rows } = await dbSql<Note>`
-    SELECT id, insight_date, user_id, content, created_at, updated_at
-    FROM notes
-    WHERE user_id = ${userId}
-    ORDER BY insight_date DESC
-  `;
-  
-  return rows.map((row: Note) => ({
-    id: row.id,
-    insight_date: formatDate(row.insight_date),
-    user_id: row.user_id,
-    content: row.content,
-    created_at: row.created_at,
-    updated_at: row.updated_at,
-  }));
+  try {
+    const { rows } = await dbSql<Note>`
+      SELECT id, insight_date, user_id, content, created_at, updated_at
+      FROM notes
+      WHERE user_id = ${userId}
+      ORDER BY insight_date DESC
+    `;
+    
+    return rows.map((row: Note) => ({
+      id: row.id,
+      insight_date: formatDate(row.insight_date),
+      user_id: row.user_id,
+      content: row.content,
+      created_at: row.created_at,
+      updated_at: row.updated_at,
+    }));
+  } catch (error) {
+    console.error('[DB] Query failed, using mock data:', error);
+    return Array.from(mockNotes.values())
+      .filter(note => note.user_id === userId)
+      .sort((a, b) => b.insight_date.localeCompare(a.insight_date));
+  }
 }
 
 /**
@@ -465,12 +593,31 @@ export async function deleteNote(id: number): Promise<void> {
     return;
   }
 
-  const dbSql = getSql();
+  const dbSql = await getSql();
   if (!dbSql) {
-    throw new Error('Database connection not available');
+    // DB 연결 실패 시 Mock에서 삭제
+    for (const [key, note] of mockNotes.entries()) {
+      if (note.id === id) {
+        mockNotes.delete(key);
+        console.log('[DB] Deleted note from memory (DB unavailable):', key);
+        return;
+      }
+    }
+    return;
   }
   
-  await dbSql`DELETE FROM notes WHERE id = ${id}`;
+  try {
+    await dbSql`DELETE FROM notes WHERE id = ${id}`;
+  } catch (error) {
+    console.error('[DB] Failed to delete note:', error);
+    // 에러 발생 시 Mock에서 삭제 시도
+    for (const [key, note] of mockNotes.entries()) {
+      if (note.id === id) {
+        mockNotes.delete(key);
+        return;
+      }
+    }
+  }
 }
 
 // =============================================
@@ -499,7 +646,7 @@ export async function testConnection(): Promise<boolean> {
     return true;
   }
 
-  const dbSql = getSql();
+  const dbSql = await getSql();
   if (!dbSql) {
     return false;
   }

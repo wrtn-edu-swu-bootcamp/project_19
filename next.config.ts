@@ -36,6 +36,17 @@ const nextConfig: NextConfig = {
       },
     ];
   },
+
+  // Vercel 배포 최적화
+  typescript: {
+    // 빌드 시 타입 에러가 있어도 계속 진행 (프로덕션에서는 경고만)
+    ignoreBuildErrors: false,
+  },
+  
+  eslint: {
+    // 빌드 시 ESLint 에러가 있어도 계속 진행
+    ignoreDuringBuilds: false,
+  },
 };
 
 export default nextConfig;

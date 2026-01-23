@@ -42,9 +42,22 @@ export async function GET(
       keywords: insight.keywords,
     });
   } catch (error) {
-    console.error('Failed to fetch insight:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[API] Failed to fetch insight:', errorMessage);
+    
+    // Vercel 로그에 더 자세한 정보 제공
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[API] Error details:', {
+        date,
+        has_db_url: !!(process.env.POSTGRES_URL || process.env.DATABASE_URL),
+      });
+    }
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        message: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+      },
       { status: 500 }
     );
   }

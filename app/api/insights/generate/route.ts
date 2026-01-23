@@ -103,15 +103,23 @@ export async function POST(request: NextRequest) {
       console.error('[CRON] Stack trace:', error.stack);
     }
     
-    return NextResponse.json(
-      { 
-        error: 'Failed to generate insight',
-        message: errorMessage,
-        date: today,
-        duration_ms: duration,
-      },
-      { status: 500 }
-    );
+    // Vercel 로그에 더 자세한 정보 제공
+    const errorDetails: Record<string, any> = {
+      error: 'Failed to generate insight',
+      message: errorMessage,
+      date: today,
+      duration_ms: duration,
+    };
+    
+    // 환경 변수 체크 (디버깅용)
+    if (errorMessage.includes('API') || errorMessage.includes('key')) {
+      errorDetails.env_check = {
+        has_gemini_key: !!process.env.GEMINI_API_KEY,
+        has_db_url: !!(process.env.POSTGRES_URL || process.env.DATABASE_URL),
+      };
+    }
+    
+    return NextResponse.json(errorDetails, { status: 500 });
   }
 }
 

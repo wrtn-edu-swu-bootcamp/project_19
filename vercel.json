@@ -5,5 +5,8 @@
       "schedule": "0 21 * * *"
     }
   ],
-  "regions": ["icn1"]
+  "regions": ["icn1"],
+  "buildCommand": "npm run build",
+  "devCommand": "npm run dev",
+  "installCommand": "npm install"
 }

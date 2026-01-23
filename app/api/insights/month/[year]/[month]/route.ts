@@ -48,9 +48,23 @@ export async function GET(
       insights,
     });
   } catch (error) {
-    console.error('Failed to fetch monthly insights:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('[API] Failed to fetch monthly insights:', errorMessage);
+    
+    // Vercel 로그에 더 자세한 정보 제공
+    if (process.env.NODE_ENV === 'production') {
+      console.error('[API] Error details:', {
+        year: yearNum,
+        month: monthNum,
+        has_db_url: !!(process.env.POSTGRES_URL || process.env.DATABASE_URL),
+      });
+    }
+    
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { 
+        error: 'Internal server error',
+        message: process.env.NODE_ENV === 'development' ? errorMessage : undefined,
+      },
       { status: 500 }
     );
   }
