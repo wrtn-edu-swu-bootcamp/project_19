@@ -133,7 +133,7 @@ export function HomeClient({
               <h1 className="text-body sm:text-headline font-semibold tracking-tight truncate">
                 {ts('home.title')}
               </h1>
-              <p className="text-caption text-secondary -mt-0.5 truncate hidden sm:block">
+              <p className="text-caption text-secondary -mt-0.5 truncate">
                 {ts('home.subtitle')}
               </p>
             </div>
@@ -141,8 +141,8 @@ export function HomeClient({
 
           {/* 오늘 날짜 뱃지 + 북마크 + 설정 버튼 */}
           <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-            <div className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-bg-secondary hidden sm:block">
-              <p className="text-footnote font-medium text-secondary whitespace-nowrap">
+            <div className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-bg-secondary">
+              <p className="text-caption sm:text-footnote font-medium text-secondary whitespace-nowrap">
                 {formattedDate}
               </p>
             </div>
