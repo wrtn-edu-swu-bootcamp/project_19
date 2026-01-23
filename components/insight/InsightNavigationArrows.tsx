@@ -7,6 +7,10 @@ type InsightNavigationArrowsProps = {
   currentDate: string;
 };
 
+/**
+ * 인사이트 상세 페이지의 이전/다음 날짜 네비게이션 화살표 컴포넌트
+ * 화면 좌우 끝에 고정되어 표시되며, 클릭 시 해당 날짜의 인사이트 페이지로 이동
+ */
 export function InsightNavigationArrows({ currentDate }: InsightNavigationArrowsProps) {
   const router = useRouter();
   
