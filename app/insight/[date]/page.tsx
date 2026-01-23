@@ -1,10 +1,11 @@
 import { notFound } from 'next/navigation';
 import { Metadata } from 'next';
-import { format } from 'date-fns';
+import { format, subDays, addDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { getInsightByDate } from '@/lib/db';
 import { InsightHeader, InsightDetail } from '@/components/insight';
 import { NoteEditor } from '@/components/note';
+import { InsightNavigationArrows } from '@/components/insight/InsightNavigationArrows';
 
 type PageProps = {
   params: Promise<{ date: string }>;
@@ -86,7 +87,7 @@ export default async function InsightPage({ params }: PageProps) {
   }
 
   return (
-    <div className="min-h-screen flex flex-col bg-bg-secondary">
+    <div className="min-h-screen flex flex-col bg-bg-secondary relative">
       <InsightHeader date={date} insightText={insight.insight_text} />
       
       <main className="flex-1 px-5 py-6 max-w-[600px] mx-auto w-full">
@@ -98,6 +99,9 @@ export default async function InsightPage({ params }: PageProps) {
           <NoteEditor insightDate={date} />
         </div>
       </main>
+
+      {/* Navigation Arrows */}
+      <InsightNavigationArrows currentDate={date} />
     </div>
   );
 }
