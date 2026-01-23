@@ -3,9 +3,8 @@ import { Metadata } from 'next';
 import { format, subDays, addDays } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import { getInsightByDate } from '@/lib/db';
-import { InsightHeader, InsightDetail } from '@/components/insight';
+import { InsightHeader, InsightDetail, InsightNavigationArrows } from '@/components/insight';
 import { NoteEditor } from '@/components/note';
-import { InsightNavigationArrows } from '@/components/insight/InsightNavigationArrows';
 
 type PageProps = {
   params: Promise<{ date: string }>;

@@ -16,8 +16,10 @@ export default async function HomePage() {
     insights = await getInsightsByMonth(currentYear, currentMonth);
     console.log(`[HomePage] Loaded ${insights.length} insights for ${currentYear}-${currentMonth}`);
   } catch (error) {
-    // DB connection might not be available in development
-    console.error('Failed to fetch insights:', error);
+    // DB connection might not be available in development or production
+    console.error('[HomePage] Failed to fetch insights:', error);
+    // 에러 발생 시 빈 배열로 계속 진행 (UI가 깨지지 않도록)
+    insights = [];
   }
 
   return (

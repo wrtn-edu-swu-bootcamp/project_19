@@ -33,18 +33,18 @@ export function InsightNavigationArrows({ currentDate }: InsightNavigationArrows
         id="insight-nav-arrow-prev"
         onClick={handlePrevDate}
         style={{ 
-          position: 'fixed !important',
-          left: '1px !important',
-          top: '50% !important',
-          transform: 'translateY(-50%) !important',
-          zIndex: '50 !important',
-          width: '2.5rem !important',
-          height: '2.5rem !important',
-          display: 'flex !important',
-          alignItems: 'center !important',
-          justifyContent: 'center !important',
-          margin: '0 !important',
-          padding: '0 !important'
+          position: 'fixed',
+          left: '1px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          zIndex: 50,
+          width: '2.5rem',
+          height: '2.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: 0,
+          padding: 0
         }}
         className="
           text-secondary hover:text-label
@@ -62,18 +62,18 @@ export function InsightNavigationArrows({ currentDate }: InsightNavigationArrows
         id="insight-nav-arrow-next"
         onClick={handleNextDate}
         style={{ 
-          position: 'fixed !important',
-          right: '1px !important',
-          top: '50% !important',
-          transform: 'translateY(-50%) !important',
-          zIndex: '50 !important',
-          width: '2.5rem !important',
-          height: '2.5rem !important',
-          display: 'flex !important',
-          alignItems: 'center !important',
-          justifyContent: 'center !important',
-          margin: '0 !important',
-          padding: '0 !important'
+          position: 'fixed',
+          right: '1px',
+          top: '50%',
+          transform: 'translateY(-50%)',
+          zIndex: 50,
+          width: '2.5rem',
+          height: '2.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          margin: 0,
+          padding: 0
         }}
         className="
           text-secondary hover:text-label

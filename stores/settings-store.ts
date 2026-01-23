@@ -4,7 +4,7 @@
  */
 
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 export type FontSize = 'small' | 'medium' | 'large';
 
@@ -23,17 +23,31 @@ export const useSettingsStore = create<SettingsState & SettingsActions>()(
       
       setFontSize: (size) => {
         set({ fontSize: size });
-        // HTML에 data-font-size 속성 적용
-        if (typeof document !== 'undefined') {
+        // HTML에 data-font-size 속성 적용 (클라이언트 사이드에서만)
+        if (typeof window !== 'undefined' && typeof document !== 'undefined') {
           document.documentElement.dataset.fontSize = size;
         }
       },
     }),
     {
       name: 'settings-storage',
+      storage: createJSONStorage(() => {
+        // 서버 사이드에서는 메모리 스토리지 사용
+        if (typeof window === 'undefined') {
+          return {
+            getItem: () => null,
+            setItem: () => {},
+            removeItem: () => {},
+            clear: () => {},
+            key: () => null,
+            length: 0,
+          } as unknown as Storage;
+        }
+        return localStorage;
+      }),
       onRehydrateStorage: () => (state) => {
-        // 페이지 로드 시 저장된 설정 적용
-        if (state && typeof document !== 'undefined') {
+        // 페이지 로드 시 저장된 설정 적용 (클라이언트 사이드에서만)
+        if (state && typeof window !== 'undefined' && typeof document !== 'undefined') {
           document.documentElement.dataset.fontSize = state.fontSize;
         }
       },

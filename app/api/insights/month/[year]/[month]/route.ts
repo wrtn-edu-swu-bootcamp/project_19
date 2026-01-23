@@ -18,12 +18,16 @@ export async function GET(
   request: NextRequest,
   { params }: RouteParams
 ) {
+  let yearNum: number | undefined;
+  let monthNum: number | undefined;
+  
   try {
-    const { year, month } = await params;
+    const resolvedParams = await params;
+    const { year, month } = resolvedParams;
     
     // Validate year and month
-    const yearNum = parseInt(year, 10);
-    const monthNum = parseInt(month, 10);
+    yearNum = parseInt(year, 10);
+    monthNum = parseInt(month, 10);
     
     if (isNaN(yearNum) || yearNum < 2020 || yearNum > 2100) {
       return NextResponse.json(
@@ -54,8 +58,8 @@ export async function GET(
     // Vercel 로그에 더 자세한 정보 제공
     if (process.env.NODE_ENV === 'production') {
       console.error('[API] Error details:', {
-        year: yearNum,
-        month: monthNum,
+        year: yearNum ?? 'unknown',
+        month: monthNum ?? 'unknown',
         has_db_url: !!(process.env.POSTGRES_URL || process.env.DATABASE_URL),
       });
     }
