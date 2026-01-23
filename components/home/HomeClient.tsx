@@ -123,39 +123,39 @@ export function HomeClient({
     <div className="flex flex-1 flex-col px-4 sm:px-5 pt-6 sm:pt-8 pb-4 min-h-screen">
       {/* Header - 미니멀 애플 스타일 */}
       <header className="w-full max-w-[600px] mx-auto mb-6 sm:mb-8 flex-shrink-0">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex items-center justify-between gap-2">
           {/* 로고 & 타이틀 */}
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 flex-shrink-0 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-sm">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <div className="w-9 h-9 sm:w-10 sm:h-10 flex-shrink-0 rounded-full bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-sm">
               <InsightIcon />
             </div>
             <div className="min-w-0 flex-1">
-              <h1 className="text-headline font-semibold tracking-tight truncate">
+              <h1 className="text-body sm:text-headline font-semibold tracking-tight truncate">
                 {ts('home.title')}
               </h1>
-              <p className="text-caption text-secondary -mt-0.5 truncate">
+              <p className="text-caption text-secondary -mt-0.5 truncate hidden sm:block">
                 {ts('home.subtitle')}
               </p>
             </div>
           </div>
 
           {/* 오늘 날짜 뱃지 + 북마크 + 설정 버튼 */}
-          <div className="flex items-center gap-2 flex-shrink-0">
-            <div className="px-3 py-1.5 rounded-full bg-bg-secondary">
+          <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
+            <div className="px-2.5 sm:px-3 py-1 sm:py-1.5 rounded-full bg-bg-secondary hidden sm:block">
               <p className="text-footnote font-medium text-secondary whitespace-nowrap">
                 {formattedDate}
               </p>
             </div>
             <Link 
               href="/bookmarks"
-              className="w-9 h-9 flex-shrink-0 rounded-full bg-bg-secondary flex items-center justify-center hover:bg-separator/30 active:scale-95 transition-all"
+              className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 rounded-full bg-bg-secondary flex items-center justify-center hover:bg-separator/30 active:scale-95 transition-all"
               aria-label="북마크"
             >
               <BookmarkIcon />
             </Link>
             <Link 
               href="/settings"
-              className="w-9 h-9 flex-shrink-0 rounded-full bg-bg-secondary flex items-center justify-center hover:bg-separator/30 active:scale-95 transition-all"
+              className="w-8 h-8 sm:w-9 sm:h-9 flex-shrink-0 rounded-full bg-bg-secondary flex items-center justify-center hover:bg-separator/30 active:scale-95 transition-all"
               aria-label="설정"
             >
               <SettingsIcon />
