@@ -32,21 +32,11 @@ export function InsightNavigationArrows({ currentDate }: InsightNavigationArrows
         type="button"
         id="insight-nav-arrow-prev"
         onClick={handlePrevDate}
-        style={{ 
-          position: 'fixed !important',
-          left: '1px !important',
-          top: '50% !important',
-          transform: 'translateY(-50%) !important',
-          zIndex: '50 !important',
-          width: '2.5rem !important',
-          height: '2.5rem !important',
-          display: 'flex !important',
-          alignItems: 'center !important',
-          justifyContent: 'center !important',
-          margin: '0 !important',
-          padding: '0 !important'
-        }}
         className="
+          !fixed !left-[1px] !top-1/2 !-translate-y-1/2
+          !z-50 !w-10 !h-10
+          !flex !items-center !justify-center
+          !m-0 !p-0
           text-secondary hover:text-label
           active:scale-95
           transition-all duration-quick
@@ -61,21 +51,11 @@ export function InsightNavigationArrows({ currentDate }: InsightNavigationArrows
         type="button"
         id="insight-nav-arrow-next"
         onClick={handleNextDate}
-        style={{ 
-          position: 'fixed !important',
-          right: '1px !important',
-          top: '50% !important',
-          transform: 'translateY(-50%) !important',
-          zIndex: '50 !important',
-          width: '2.5rem !important',
-          height: '2.5rem !important',
-          display: 'flex !important',
-          alignItems: 'center !important',
-          justifyContent: 'center !important',
-          margin: '0 !important',
-          padding: '0 !important'
-        }}
         className="
+          !fixed !right-[1px] !top-1/2 !-translate-y-1/2
+          !z-50 !w-10 !h-10
+          !flex !items-center !justify-center
+          !m-0 !p-0
           text-secondary hover:text-label
           active:scale-95
           transition-all duration-quick
